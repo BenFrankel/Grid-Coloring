@@ -248,11 +248,11 @@ def main():
                         gr = size.grid_rect(screen)
                         grid_surf = pygame.Surface((gr.width+2, gr.height+2))
                         grid_surf.fill(Color.WHITE)
-                        main_grid.draw(grid_surf, (0, 0), size.tile_size(screen))
+                        main_grid.draw(grid_surf, (0, 0), size.tile_size(screen, main_grid))
                         pygame.image.save(grid_surf, "grids/img/latest.png")
 
         screen.fill(Color.WHITE)
-        main_grid.draw(screen, size.grid_rect(screen).topleft, size.tile_size(screen))
+        main_grid.draw(screen, size.grid_rect(screen, main_grid).topleft, size.tile_size(screen, main_grid))
         draw_colors(screen, colors, current_color)
 
         pygame.display.update()
