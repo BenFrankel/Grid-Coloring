@@ -181,7 +181,6 @@ class Grid:
 main_grid = Grid(NUM_ROWS, NUM_COLS)
 
 
-# TODO: save_grid and load_grid should allow saving grid objects (not as images) to load later and continue editing.
 def save_grid():
     f = open("grids/inf/latest.txt", 'w', encoding='utf-8')
     f.write(main_grid.encode())
@@ -243,6 +242,8 @@ def main():
                     if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols and (row, col) != previous:
                         current = (row, col)
                         if pygame.mouse.get_pressed()[0]:
+                            if (colors[current_color], style) != (main_grid.at(current).color, main_grid.at(current).style):
+                                main_grid.disconnect(current, NORTH | EAST | SOUTH | WEST)
                             if connection_mode == TREE:
                                 if current not in visited:
                                     adj = adjacency(current, previous)
@@ -275,6 +276,8 @@ def main():
                     if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols:
                         current = (row, col)
                         if event.button == 1:
+                            if (colors[current_color], style) != (main_grid.at(current).color, main_grid.at(current).style):
+                                main_grid.disconnect(current, NORTH | EAST | SOUTH | WEST)
                             visited.add(current)
                             previous = current
                             main_grid.put(current, colors[current_color], style)
