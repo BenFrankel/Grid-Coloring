@@ -17,3 +17,13 @@ NORTH = 1
 EAST  = 2
 SOUTH = 4
 WEST  = 8
+
+
+# Default dimensions of the main grid.
+NUM_ROWS = 8
+NUM_COLS = 8
+
+
+# Bounds on the dimensions of the main grid.
+MAX_SIZE = 32
+MIN_SIZE = 4

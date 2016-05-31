@@ -2,13 +2,13 @@ import pygame
 from constants import *
 
 # The following functions are the different marking styles.
-# They take as arguments the surface being drawn onto, the tile's color, the tile's position,
+# They take as arguments the surface being drawn onto, the tile's position, the tile's color,
 # the tile's connections, the tile's size, and the line width.
 # Then the functions draw their respective markings from these arguments.
 
 
 # Plain color fill.
-def FLAT(surf, color, pos, connections, ts, lw):
+def FLAT(surf, pos, color, connections, ts, lw):
     tile_rect = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     pygame.draw.rect(surf, color, tile_rect)
 
@@ -16,7 +16,7 @@ DEFAULT = FLAT
 
 
 # Color fill with borders and shading.
-def FILL(surf, color, pos, connections, ts, lw):
+def FILL(surf, pos, color, connections, ts, lw):
     tr = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     pygame.draw.rect(surf, color, pygame.Rect(pos[0], pos[1], ts + 2*lw, ts + 2*lw))
 
@@ -76,7 +76,7 @@ def FILL(surf, color, pos, connections, ts, lw):
 
 
 # Node + Edges type of mark.
-def PATH(surf, color, pos, connections, ts, lw):
+def PATH(surf, pos, color, connections, ts, lw):
     tr = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     ds = int(ts / 7 + .5)
     ew = int(ts / 15 - .5)
