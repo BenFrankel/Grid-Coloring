@@ -1,74 +1,98 @@
 import pygame
-import size
-from constants import Direction, Color
+from constants import *
+
+# The following functions are the different marking styles.
+# They take as arguments the surface being drawn onto, the tile's color, the tile's position,
+# the tile's connections, the tile's size, and the line width.
+# Then the functions draw their respective markings from these arguments.
 
 
 # Plain color fill.
-def FLAT(surf, color, pos, connections, ts):
-    lw = size.line_width(ts)
-    tile_rect = pygame.Rect(pos[0]+lw-1, pos[1]+lw-1, ts-lw+1, ts-lw+1)
+def FLAT(surf, color, pos, connections, ts, lw):
+    tile_rect = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     pygame.draw.rect(surf, color, tile_rect)
+
 DEFAULT = FLAT
 
 
-# Color fill with borders.
-def FILL(surf, color, pos, connections, ts):
-    tile_rect = pygame.Rect(pos[0], pos[1], ts, ts)
-    pygame.draw.rect(surf, color, tile_rect)
-    lw = size.line_width(ts)
+# Color fill with borders and shading.
+def FILL(surf, color, pos, connections, ts, lw):
+    tr = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
+    pygame.draw.rect(surf, color, pygame.Rect(pos[0], pos[1], ts + 2*lw, ts + 2*lw))
 
-    # Boundary and shading.
-    hori = pygame.Surface((tile_rect.width-lw, 2*lw), pygame.SRCALPHA)
-    vert = pygame.Surface((2*lw, tile_rect.height-lw), pygame.SRCALPHA)
-    if not connections & Direction.NORTH:
-        pygame.draw.line(surf, Color.BLACK, tile_rect.topleft, tile_rect.topright, lw)
-        hori.fill((255, 255, 255, 70))
-        surf.blit(hori, (tile_rect.left+lw, tile_rect.top+lw))
-    if not connections & Direction.EAST:
-        pygame.draw.line(surf, Color.BLACK, tile_rect.topright, tile_rect.bottomright, lw)
-        vert.fill((255, 255, 255, 70))
-        surf.blit(vert, (tile_rect.right-2*lw, tile_rect.top+lw))
-    if not connections & Direction.SOUTH:
-        pygame.draw.line(surf, Color.BLACK, tile_rect.bottomright, tile_rect.bottomleft, lw)
-        hori.fill((0, 0, 0, 40))
-        surf.blit(hori, (tile_rect.left+lw, tile_rect.bottom-2*lw))
-    if not connections & Direction.WEST:
-        pygame.draw.line(surf, Color.BLACK, tile_rect.bottomleft, tile_rect.topleft, lw)
-        vert.fill((0, 0, 0, 40))
-        surf.blit(vert, (tile_rect.left+lw, tile_rect.top+lw))
+    # Edge boundary and shading.
+    sw = 2 * lw
+    hori_shade = pygame.Surface((tr.width, sw), pygame.SRCALPHA)
+    vert_shade = pygame.Surface((sw, tr.height), pygame.SRCALPHA)
+    hori_border = pygame.Surface((tr.width + 2*lw, lw))
+    hori_border.fill(BLACK)
+    vert_border = pygame.Surface((lw, tr.height + 2*lw))
+    vert_border.fill(BLACK)
+    hori_cover = pygame.Surface((tr.width, lw), pygame.SRCALPHA)
+    hori_cover.fill((*BLACK, 50))
+    vert_cover = pygame.Surface((lw, tr.height), pygame.SRCALPHA)
+    vert_cover.fill((*BLACK, 50))
+    if connections & NORTH:
+        surf.blit(hori_cover, (tr.left, tr.top - lw))
+    else:
+        hori_shade.fill((*WHITE, 70))
+        surf.blit(hori_shade, tr.topleft)
+        surf.blit(hori_border, (tr.left - lw, tr.top - lw))
+    if not connections & EAST:
+        vert_shade.fill((*WHITE, 70))
+        surf.blit(vert_shade, (tr.right - sw, tr.top))
+        surf.blit(vert_border, (tr.right, tr.top - lw))
+    if not connections & SOUTH:
+        hori_shade.fill((*BLACK, 40))
+        surf.blit(hori_shade, (tr.left, tr.bottom - sw))
+        surf.blit(hori_border, (tr.left - lw, tr.bottom))
+    if connections & WEST:
+        surf.blit(vert_cover, (tr.left - lw, tr.top))
+    else:
+        vert_shade.fill((*BLACK, 40))
+        surf.blit(vert_shade, tr.topleft)
+        surf.blit(vert_border, (tr.left - lw, tr.top - lw))
 
-    # Corner shading.
-    corner = pygame.Surface((2*lw, 2*lw), pygame.SRCALPHA)
-    if connections & Direction.NORTH and connections & Direction.EAST:
-        corner.fill((255, 255, 255, 70))
-        surf.blit(corner, (tile_rect.right-2*lw, tile_rect.top+lw))
-    if connections & Direction.SOUTH and connections & Direction.EAST:
-        corner.fill((0, 0, 0, 40))
-        surf.blit(corner, (tile_rect.right-2*lw, tile_rect.bottom-2*lw))
-    if connections & Direction.SOUTH and connections & Direction.WEST:
-        corner.fill((0, 0, 0, 40))
-        surf.blit(corner, (tile_rect.left+lw, tile_rect.bottom-2*lw))
-    if connections & Direction.NORTH and connections & Direction.WEST:
-        corner.fill((255, 255, 255, 70))
-        surf.blit(corner, (tile_rect.left+lw, tile_rect.top+lw))
+    # Corner boundary and shading.
+    corner_shade = pygame.Surface((sw, sw), pygame.SRCALPHA)
+    corner_border = pygame.Surface((lw, lw))
+    corner_border.fill(BLACK)
+    if connections & NORTH and connections & EAST:
+        corner_shade.fill((*WHITE, 70))
+        surf.blit(corner_shade, (tr.right - sw, tr.top))
+        surf.blit(corner_border, (tr.right, tr.top - lw))
+    if connections & SOUTH and connections & EAST:
+        corner_shade.fill((*BLACK, 40))
+        surf.blit(corner_shade, (tr.right - sw, tr.bottom - sw))
+        surf.blit(corner_border, tr.bottomright)
+    if connections & SOUTH and connections & WEST:
+        corner_shade.fill((*BLACK, 40))
+        surf.blit(corner_shade, (tr.left, tr.bottom - sw))
+        surf.blit(corner_border, (tr.left - lw, tr.bottom))
+    if connections & NORTH and connections & WEST:
+        corner_shade.fill((*WHITE, 70))
+        surf.blit(corner_shade, tr.topleft)
+        surf.blit(corner_border, (tr.left - lw, tr.top - lw))
 
 
 # Node + Edges type of mark.
-def PATH(surf, color, pos, connections, ts):
-    tile_rect = pygame.Rect(pos[0], pos[1], ts, ts)
-    dot_size = int(ts/7+.5)
-    width = int(ts/15-.5)
-    if dot_size % 2 != width % 2:
-        width -= 1
-    if width <= 0:
-        width = 1
-        dot_size += 1
-    pygame.draw.rect(surf, color, pygame.Rect(pos[0] + (ts-dot_size)//2 + 1, pos[1] + (ts-dot_size)//2 + 1, dot_size, dot_size))
-    if connections & Direction.NORTH:
-        pygame.draw.line(surf, color, tile_rect.center, tile_rect.midtop, width)
-    if connections & Direction.EAST:
-        pygame.draw.line(surf, color, tile_rect.center, tile_rect.midright, width)
-    if connections & Direction.SOUTH:
-        pygame.draw.line(surf, color, tile_rect.center, tile_rect.midbottom, width)
-    if connections & Direction.WEST:
-        pygame.draw.line(surf, color, tile_rect.center, tile_rect.midleft, width)
+def PATH(surf, color, pos, connections, ts, lw):
+    tr = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
+    ds = int(ts / 7 + .5)
+    ew = int(ts / 15 - .5)
+    if ds % 2 != ew % 2:
+        ew -= 1
+    if ew <= 0:
+        ew = 1
+        ds += 1
+    dot = pygame.Surface((ds, ds))
+    dot.fill(color)
+    surf.blit(dot, (tr.left + (ts - ds)//2 + 1, tr.top + (ts - ds)//2 + 1))
+    if connections & NORTH:
+        pygame.draw.line(surf, color, tr.center, tr.midtop, ew)
+    if connections & EAST:
+        pygame.draw.line(surf, color, tr.center, tr.midright, ew)
+    if connections & SOUTH:
+        pygame.draw.line(surf, color, tr.center, tr.midbottom, ew)
+    if connections & WEST:
+        pygame.draw.line(surf, color, tr.center, tr.midleft, ew)

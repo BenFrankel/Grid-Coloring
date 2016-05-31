@@ -8,6 +8,7 @@ import size
 pygame.init()
 
 
+# TODO: At the moment there's no way to change the grid dimensions besides directly modifying the code.
 NUM_ROWS = 8
 NUM_COLS = 8
 
@@ -19,22 +20,22 @@ def adjacency(p1, p2):
     south = int(p1[0] == p2[0] + 1)
     west  = int(p1[1] == p2[1] - 1)
     if north + east + south + west == 1:
-        if north == 1: return Direction.NORTH
-        if east  == 1: return Direction.EAST
-        if south == 1: return Direction.SOUTH
-        if west  == 1: return Direction.WEST
+        if north == 1: return NORTH
+        if east  == 1: return EAST
+        if south == 1: return SOUTH
+        if west  == 1: return WEST
     return -1
 
 
 # Returns the coordinate of the adjacent cell at direction dir from p.
 def near(p, dir):
-    return p[0] + (dir == Direction.SOUTH) - (dir == Direction.NORTH),\
-           p[1] + (dir == Direction.EAST) - (dir == Direction.WEST)
+    return p[0] + (dir == SOUTH) - (dir == NORTH),\
+           p[1] + (dir == EAST) - (dir == WEST)
 
 
 class Tile:
     def __init__(self):
-        self.color = Color.WHITE
+        self.color = WHITE
         self.style = marks.FLAT
         self.connections = 0
 
@@ -49,11 +50,11 @@ class Tile:
         self.connections &= ~direction
 
     def erase(self):
-        self.color = Color.WHITE
+        self.color = WHITE
         self.style = marks.FLAT
 
-    def draw(self, screen, pos, ts):
-        self.style(screen, self.color, pos, self.connections, ts)
+    def draw(self, screen, pos, ts, lw):
+        self.style(screen, self.color, pos, self.connections, ts, lw)
 
     def encode(self):
         style_c = '?'
@@ -80,56 +81,64 @@ class Grid():
     def connect(self, p, dir):
         if dir == -1: return
         self.grid[p[0]][p[1]].connect(dir)
-        if dir & Direction.NORTH and p[0] > 0:
-            self.grid[p[0] - 1][p[1]].connect(Direction.SOUTH)
-        if dir & Direction.EAST and p[1] < self.ncols-1:
-            self.grid[p[0]][p[1] + 1].connect(Direction.WEST)
-        if dir & Direction.SOUTH and p[0] < self.nrows-1:
-            self.grid[p[0] + 1][p[1]].connect(Direction.NORTH)
-        if dir & Direction.WEST and p[1] > 0:
-            self.grid[p[0]][p[1] - 1].connect(Direction.EAST)
+        if dir & NORTH and p[0] > 0:
+            self.grid[p[0] - 1][p[1]].connect(SOUTH)
+        if dir & EAST and p[1] < self.ncols-1:
+            self.grid[p[0]][p[1] + 1].connect(WEST)
+        if dir & SOUTH and p[0] < self.nrows-1:
+            self.grid[p[0] + 1][p[1]].connect(NORTH)
+        if dir & WEST and p[1] > 0:
+            self.grid[p[0]][p[1] - 1].connect(EAST)
 
     def disconnect(self, p, dir):
         self.grid[p[0]][p[1]].disconnect(dir)
-        if dir & Direction.NORTH and p[0] > 0:
-            self.grid[p[0] - 1][p[1]].disconnect(Direction.SOUTH)
-        if dir & Direction.EAST and p[1] < self.ncols-1:
-            self.grid[p[0]][p[1] + 1].disconnect(Direction.WEST)
-        if dir & Direction.SOUTH and p[0] < self.nrows-1:
-            self.grid[p[0] + 1][p[1]].disconnect(Direction.NORTH)
-        if dir & Direction.WEST and p[1] > 0:
-            self.grid[p[0]][p[1] - 1].disconnect(Direction.EAST)
+        if dir & NORTH and p[0] > 0:
+            self.grid[p[0] - 1][p[1]].disconnect(SOUTH)
+        if dir & EAST and p[1] < self.ncols-1:
+            self.grid[p[0]][p[1] + 1].disconnect(WEST)
+        if dir & SOUTH and p[0] < self.nrows-1:
+            self.grid[p[0] + 1][p[1]].disconnect(NORTH)
+        if dir & WEST and p[1] > 0:
+            self.grid[p[0]][p[1] - 1].disconnect(EAST)
 
     def erase(self, p):
         self.grid[p[0]][p[1]].erase()
-        self.disconnect((p[0], p[1]), Direction.NORTH | Direction.EAST | Direction.SOUTH | Direction.WEST)
+        self.disconnect((p[0], p[1]), NORTH | EAST | SOUTH | WEST)
 
-    def draw(self, surf, pos, ts):
-        gr = pygame.Rect(pos[0], pos[1], ts * self.ncols, ts * self.nrows)
+    def draw(self, surf, pos, ts, lw, bw):
+        gr = pygame.Rect(pos[0], pos[1], (ts + lw) * self.ncols - lw + 2*bw, (ts + lw) * self.nrows - lw + 2*bw)
+
+        for i in range(1, self.nrows):
+            line = pygame.Surface((gr.width - 2*bw, lw))
+            line.fill(L_GRAY)
+            surf.blit(line, (gr.left + bw, gr.top + (ts+lw)*i + bw - lw))
+        for i in range(1, self.ncols):
+            line = pygame.Surface((lw, gr.height - 2*bw))
+            line.fill(L_GRAY)
+            surf.blit(line, (gr.left + (ts+lw)*i + bw - lw, gr.top + bw))
 
         for i in range(self.nrows):
             for j in range(self.ncols):
-                self.at(i, j).draw(surf, (gr.left + ts*j, gr.top + ts*i), ts)
+                self.at(i, j).draw(surf, (gr.left + (ts+lw)*j + bw - lw, gr.top + (ts+lw)*i + bw - lw), ts, lw)
 
-        line_width = max(int(ts/40 + .5), 1)
-        for i in range(self.nrows):
-            line = pygame.Surface((gr.width, line_width), pygame.SRCALPHA)
-            line.fill((0, 0, 0, 50))
-            surf.blit(line, (gr.left, gr.top + ts*i))
-        for i in range(self.ncols):
-            line = pygame.Surface((line_width, gr.height), pygame.SRCALPHA)
-            line.fill((0, 0, 0, 50))
-            surf.blit(line, (gr.left + ts*i, gr.top))
+        line = pygame.Surface((bw, gr.height))
+        line.fill(BLACK)
+        surf.blit(line, gr.topleft)
+        surf.blit(line, (gr.right - bw, gr.top))
+        line = pygame.Surface((gr.width, bw))
+        line.fill(BLACK)
+        surf.blit(line, gr.topleft)
+        surf.blit(line, (gr.left, gr.bottom - bw))
 
-        pygame.draw.rect(surf, Color.BLACK, pygame.Rect(gr.x, gr.y, gr.width+2, gr.height+2), max(int(ts/15 + .5), 1))
 main_grid = Grid(NUM_ROWS, NUM_COLS)
 
 
+# TODO: save_grid and load_grid should allow saving grid objects (not as images) to load later and continue editing.
 def save_grid():
     encoded = ''
     for row in main_grid.grid:
         for tile in row:
-            encoded += tile
+            encoded += tile.encode()
         encoded += '\n'
 
 
@@ -154,7 +163,7 @@ def main():
     screen = pygame.display.set_mode((600, 400), pygame.RESIZABLE)
     pygame.display.set_caption("Grid Coloring")
 
-    colors = [Color.BLACK, Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE, Color.PURPLE]
+    colors = [BLACK, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE]
     current_color = 0
 
     BLOB = 0
@@ -168,6 +177,10 @@ def main():
     previous = (-1, -1)
 
     while True:
+        gr = size.grid_rect(screen, main_grid)
+        ts = size.tile_size(screen, main_grid)
+        lw = size.line_width(screen, main_grid)
+        bw = size.border_width(screen, main_grid)
         for event in pygame.event.get():
             if event.type == QUIT:
                 exit()
@@ -177,10 +190,8 @@ def main():
 
             elif event.type == MOUSEMOTION:
                 if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
-                    gr = size.grid_rect(screen, main_grid)
-                    ts = size.tile_size(screen, main_grid)
-                    row = int((event.pos[1] - gr.top)//ts)
-                    col = int((event.pos[0] - gr.left)//ts)
+                    row = int((event.pos[1] - gr.top - bw)//(ts + lw))
+                    col = int((event.pos[0] - gr.left - bw)//(ts + lw))
                     if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols and (row, col) != previous:
                         current = (row, col)
                         if pygame.mouse.get_pressed()[0]:
@@ -189,7 +200,7 @@ def main():
                                     adj = adjacency(current, previous)
                                     main_grid.connect(previous, adj)
                             elif connection_mode == BLOB:
-                                for direction in Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST:
+                                for direction in NORTH, EAST, SOUTH, WEST:
                                     if near(current, direction) in visited:
                                         main_grid.connect(current, direction)
                             elif connection_mode == TRACE:
@@ -211,10 +222,8 @@ def main():
                     current_color -= 1
                     current_color %= len(colors)
                 else:
-                    gr = size.grid_rect(screen, main_grid)
-                    ts = size.tile_size(screen, main_grid)
-                    row = int((event.pos[1] - gr.top)//ts)
-                    col = int((event.pos[0] - gr.left)//ts)
+                    row = int((event.pos[1] - gr.top - bw)//(ts + lw))
+                    col = int((event.pos[0] - gr.left - bw)//(ts + lw))
                     if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols:
                         current = (row, col)
                         if event.button == 1:
@@ -229,7 +238,7 @@ def main():
             elif event.type == KEYDOWN:
                 if event.unicode.isdigit():
                     digit = int(event.unicode)
-                    if digit <= len(colors):
+                    if 1 <= digit <= len(colors):
                         current_color = digit - 1
                 elif event.key == pygame.K_q:
                     connection_mode = TREE
@@ -245,14 +254,24 @@ def main():
                     style = marks.FLAT
                 elif event.key == pygame.K_s:
                     if event.mod & pygame.KMOD_CTRL:
-                        gr = size.grid_rect(screen)
-                        grid_surf = pygame.Surface((gr.width+2, gr.height+2))
-                        grid_surf.fill(Color.WHITE)
-                        main_grid.draw(grid_surf, (0, 0), size.tile_size(screen, main_grid))
+                        gr = size.grid_rect(screen, main_grid)
+                        grid_surf = pygame.Surface((gr.width, gr.height))
+                        grid_surf.fill(WHITE)
+                        main_grid.draw(grid_surf,
+                                       (0, 0),
+                                       size.tile_size(screen, main_grid),
+                                       size.line_width(screen, main_grid),
+                                       size.border_width(screen, main_grid))
                         pygame.image.save(grid_surf, "grids/img/latest.png")
 
-        screen.fill(Color.WHITE)
-        main_grid.draw(screen, size.grid_rect(screen, main_grid).topleft, size.tile_size(screen, main_grid))
+        screen.fill(WHITE)
+
+        main_grid.draw(screen,
+                       size.grid_rect(screen, main_grid).topleft,
+                       size.tile_size(screen, main_grid),
+                       size.line_width(screen, main_grid),
+                       size.border_width(screen, main_grid))
+
         draw_colors(screen, colors, current_color)
 
         pygame.display.update()
