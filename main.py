@@ -27,17 +27,17 @@ def adjacency(p1, p2):
     return -1
 
 
-# Returns the coordinate of the adjacent cell at direction dir from p.
-def near(p, dir):
-    return p[0] + (dir == SOUTH) - (dir == NORTH),\
-           p[1] + (dir == EAST) - (dir == WEST)
+# Returns the coordinates of the adjacent cell at a given direction from p.
+def near(p, direction):
+    return p[0] + (direction == SOUTH) - (direction == NORTH), \
+           p[1] + (direction == EAST) - (direction == WEST)
 
 
 class Tile:
-    def __init__(self):
-        self.color = WHITE
-        self.style = marks.FLAT
-        self.connections = 0
+    def __init__(self, color=WHITE, style=marks.FLAT, connections=0):
+        self.color = color
+        self.style = style
+        self.connections = connections
 
     def put(self, color, style):
         self.color = color
@@ -61,44 +61,70 @@ class Tile:
         if self.style == marks.FLAT: style_c = 'O'
         elif self.style == marks.PATH: style_c = '+'
         elif self.style == marks.FILL: style_c = '#'
+
         color_c = chr(self.color[0]) + chr(self.color[1]) + chr(self.color[2])
+
         cnnct_c = chr(self.connections)
+
         return style_c + color_c + cnnct_c
 
+    @staticmethod
+    def decode(s):
+        assert len(s) == 5
 
-class Grid():
+        style = marks.DEFAULT
+        if s[0] == 'O': style = marks.FLAT
+        elif s[0] == '+': style = marks.PATH
+        elif s[0] == '#': style = marks.FILL
+
+        color = (ord(s[1]), ord(s[2]), ord(s[3]))
+
+        connections = ord(s[4])
+
+        return Tile(color, style, connections)
+
+
+class Grid:
     def __init__(self, nrows, ncols):
         self.nrows = nrows
         self.ncols = ncols
         self.grid = [[Tile() for i in range(ncols)] for j in range(nrows)]
 
-    def at(self, row, col):
-        return self.grid[row][col]
+    def at(self, *args):
+        assert len(args) in (1, 2)
+
+        if len(args) == 1:
+            return self.grid[args[0][0]][args[0][1]]
+        elif len(args) == 2:
+            return self.grid[args[0]][args[1]]
+
+    def set(self, p, tile):
+        self.grid[p[0]][p[1]] = tile
 
     def put(self, p, color, style):
         self.grid[p[0]][p[1]].put(color, style)
 
-    def connect(self, p, dir):
-        if dir == -1: return
-        self.grid[p[0]][p[1]].connect(dir)
-        if dir & NORTH and p[0] > 0:
+    def connect(self, p, direction):
+        if direction == -1: return
+        self.grid[p[0]][p[1]].connect(direction)
+        if direction & NORTH and p[0] > 0:
             self.grid[p[0] - 1][p[1]].connect(SOUTH)
-        if dir & EAST and p[1] < self.ncols-1:
+        if direction & EAST and p[1] < self.ncols-1:
             self.grid[p[0]][p[1] + 1].connect(WEST)
-        if dir & SOUTH and p[0] < self.nrows-1:
+        if direction & SOUTH and p[0] < self.nrows-1:
             self.grid[p[0] + 1][p[1]].connect(NORTH)
-        if dir & WEST and p[1] > 0:
+        if direction & WEST and p[1] > 0:
             self.grid[p[0]][p[1] - 1].connect(EAST)
 
-    def disconnect(self, p, dir):
-        self.grid[p[0]][p[1]].disconnect(dir)
-        if dir & NORTH and p[0] > 0:
+    def disconnect(self, p, direction):
+        self.grid[p[0]][p[1]].disconnect(direction)
+        if direction & NORTH and p[0] > 0:
             self.grid[p[0] - 1][p[1]].disconnect(SOUTH)
-        if dir & EAST and p[1] < self.ncols-1:
+        if direction & EAST and p[1] < self.ncols-1:
             self.grid[p[0]][p[1] + 1].disconnect(WEST)
-        if dir & SOUTH and p[0] < self.nrows-1:
+        if direction & SOUTH and p[0] < self.nrows-1:
             self.grid[p[0] + 1][p[1]].disconnect(NORTH)
-        if dir & WEST and p[1] > 0:
+        if direction & WEST and p[1] > 0:
             self.grid[p[0]][p[1] - 1].disconnect(EAST)
 
     def erase(self, p):
@@ -130,20 +156,42 @@ class Grid():
         surf.blit(line, gr.topleft)
         surf.blit(line, (gr.left, gr.bottom - bw))
 
+    def encode(self):
+        encoded = chr(self.nrows) + chr(self.ncols)
+        for row in self.grid:
+            for tile in row:
+                encoded += tile.encode()
+        return encoded
+
+    @staticmethod
+    def decode(s):
+        assert len(s) >= 2
+        nrows = ord(s[0])
+        ncols = ord(s[1])
+        assert len(s) == 2 + 5*nrows*ncols
+
+        decoded = Grid(nrows, ncols)
+        for i in range(nrows):
+            for j in range(ncols):
+                tile_pos = 2 + 5*ncols*i + 5*j
+                decoded.set((i, j), Tile.decode(s[tile_pos:tile_pos + 5]))
+        return decoded
+
+
 main_grid = Grid(NUM_ROWS, NUM_COLS)
 
 
 # TODO: save_grid and load_grid should allow saving grid objects (not as images) to load later and continue editing.
 def save_grid():
-    encoded = ''
-    for row in main_grid.grid:
-        for tile in row:
-            encoded += tile.encode()
-        encoded += '\n'
+    f = open("grids/inf/latest.txt", 'w', encoding='utf-8')
+    f.write(main_grid.encode())
+    f.close()
 
 
-def load_grid(name):
-    pass
+def load_grid(name='latest'):
+    f = open("grids/inf/" + name + ".txt", encoding='utf-8')
+    global main_grid
+    main_grid = Grid.decode(f.read())
 
 
 def draw_colors(screen, colors, current_color):
@@ -254,15 +302,20 @@ def main():
                     style = marks.FLAT
                 elif event.key == pygame.K_s:
                     if event.mod & pygame.KMOD_CTRL:
-                        gr = size.grid_rect(screen, main_grid)
-                        grid_surf = pygame.Surface((gr.width, gr.height))
-                        grid_surf.fill(WHITE)
-                        main_grid.draw(grid_surf,
-                                       (0, 0),
-                                       size.tile_size(screen, main_grid),
-                                       size.line_width(screen, main_grid),
-                                       size.border_width(screen, main_grid))
-                        pygame.image.save(grid_surf, "grids/img/latest.png")
+                        if event.mod & pygame.KMOD_SHIFT:
+                            save_grid()
+                        else:
+                            gr = size.grid_rect(screen, main_grid)
+                            grid_surf = pygame.Surface((gr.width, gr.height))
+                            grid_surf.fill(WHITE)
+                            main_grid.draw(grid_surf,
+                                           (0, 0),
+                                           size.tile_size(screen, main_grid),
+                                           size.line_width(screen, main_grid),
+                                           size.border_width(screen, main_grid))
+                            pygame.image.save(grid_surf, "grids/img/latest.png")
+                elif event.key == pygame.K_l:
+                    load_grid()
 
         screen.fill(WHITE)
 
