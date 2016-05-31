@@ -13,12 +13,15 @@ W: BLOB
 E: TRACE (default)
 
 Marking Style
-R: PATH
-T: FILL
-Y: FLAT  (default)
+I: PATH
+O: FILL
+P: FLAT  (default)
+
+Resizing
+Up:
 
 Saving
-CTRL+S to save the image.
-SHIFT+CTRL+S to save the grid.
-L to load the saved grid.
+CTRL+S: save the image.
+CTRL+G: save the grid.
+CTRL+L: load the saved grid.
 ```

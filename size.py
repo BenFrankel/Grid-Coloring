@@ -7,7 +7,7 @@ import pygame
 
 # Returns the pixel sidelength of a tile.
 def tile_size(screen, grid):
-    return int(min(screen.get_width() / (grid.ncols+2), screen.get_height() / (grid.nrows+3)))
+    return max(int(min(screen.get_width() / (grid.ncols+2), screen.get_height() / (grid.nrows+4)) - .5), 1)
 
 
 # Returns the pixel width of a line.

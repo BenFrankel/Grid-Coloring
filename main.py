@@ -8,23 +8,20 @@ import size
 pygame.init()
 
 
-# TODO: At the moment there's no way to change the grid dimensions besides directly modifying the code.
 NUM_ROWS = 8
 NUM_COLS = 8
+MAX_SIZE = 32
+MIN_SIZE = 4
 
 
 # Returns -1 if p1 is not adjacent to p2, otherwise the relative position of p1 from p2.
 def adjacency(p1, p2):
-    north = int(p1[0] == p2[0] - 1)
-    east  = int(p1[1] == p2[1] + 1)
-    south = int(p1[0] == p2[0] + 1)
-    west  = int(p1[1] == p2[1] - 1)
-    if north + east + south + west == 1:
-        if north == 1: return NORTH
-        if east  == 1: return EAST
-        if south == 1: return SOUTH
-        if west  == 1: return WEST
-    return -1
+    if abs(p1[0] - p2[0]) + abs(p1[1] - p2[1]) != 1:
+        return -1
+    if p1[0] == p2[0] - 1: return NORTH
+    if p1[1] == p2[1] - 1: return WEST
+    if p1[0] == p2[0] + 1: return SOUTH
+    if p1[1] == p2[1] + 1: return EAST
 
 
 # Returns the coordinates of the adjacent cell at a given direction from p.
@@ -109,27 +106,27 @@ class Grid:
         self.grid[p[0]][p[1]].connect(direction)
         if direction & NORTH and p[0] > 0:
             self.grid[p[0] - 1][p[1]].connect(SOUTH)
-        if direction & EAST and p[1] < self.ncols-1:
-            self.grid[p[0]][p[1] + 1].connect(WEST)
-        if direction & SOUTH and p[0] < self.nrows-1:
-            self.grid[p[0] + 1][p[1]].connect(NORTH)
         if direction & WEST and p[1] > 0:
             self.grid[p[0]][p[1] - 1].connect(EAST)
+        if direction & SOUTH and p[0] < self.nrows-1:
+            self.grid[p[0] + 1][p[1]].connect(NORTH)
+        if direction & EAST and p[1] < self.ncols-1:
+            self.grid[p[0]][p[1] + 1].connect(WEST)
 
     def disconnect(self, p, direction):
         self.grid[p[0]][p[1]].disconnect(direction)
         if direction & NORTH and p[0] > 0:
             self.grid[p[0] - 1][p[1]].disconnect(SOUTH)
-        if direction & EAST and p[1] < self.ncols-1:
-            self.grid[p[0]][p[1] + 1].disconnect(WEST)
-        if direction & SOUTH and p[0] < self.nrows-1:
-            self.grid[p[0] + 1][p[1]].disconnect(NORTH)
         if direction & WEST and p[1] > 0:
             self.grid[p[0]][p[1] - 1].disconnect(EAST)
+        if direction & SOUTH and p[0] < self.nrows-1:
+            self.grid[p[0] + 1][p[1]].disconnect(NORTH)
+        if direction & EAST and p[1] < self.ncols-1:
+            self.grid[p[0]][p[1] + 1].disconnect(WEST)
 
     def erase(self, p):
         self.grid[p[0]][p[1]].erase()
-        self.disconnect((p[0], p[1]), NORTH | EAST | SOUTH | WEST)
+        self.disconnect((p[0], p[1]), NORTH | WEST | SOUTH | EAST)
 
     def draw(self, surf, pos, ts, lw, bw):
         gr = pygame.Rect(pos[0], pos[1], (ts + lw) * self.ncols - lw + 2*bw, (ts + lw) * self.nrows - lw + 2*bw)
@@ -193,17 +190,20 @@ def load_grid(name='latest'):
     main_grid = Grid.decode(f.read())
 
 
-def draw_colors(screen, colors, current_color):
+def draw_colors(screen, colors, color_index):
     gr = size.grid_rect(screen, main_grid)
-    clr_size = int(gr.width / main_grid.ncols * 0.8)
+    cs = int(gr.width / main_grid.ncols * 0.8)
+    gap = max(min(0.5, (screen.get_width() - cs/2)/len(colors)/cs - 1), 0.1)
+    if gap == 0.1:
+        cs = int(cs * 0.8)
 
-    y = int((screen.get_height() + gr.bottom)/2 - clr_size/2)
+    y = int((screen.get_height() + gr.bottom)/2 - cs/2)
     for i, c in enumerate(colors):
-        x = int(screen.get_width()/2 - len(colors)*clr_size*0.75 + clr_size*1.5*i + clr_size/4)
-        if i == current_color:
-            pygame.draw.rect(screen, c, pygame.Rect(x, y-clr_size/4, clr_size, clr_size))
+        x = int(screen.get_width()/2 - len(colors)*cs*(1+gap)/2 + cs*(1+gap)*i + cs*gap/2)
+        if i == color_index:
+            pygame.draw.rect(screen, c, pygame.Rect(x, y-cs/4, cs, cs))
         else:
-            pygame.draw.rect(screen, c, pygame.Rect(x, y, clr_size, clr_size))
+            pygame.draw.rect(screen, c, pygame.Rect(x, y, cs, cs))
 
 
 def main():
@@ -211,7 +211,7 @@ def main():
     pygame.display.set_caption("Grid Coloring")
 
     colors = [BLACK, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE]
-    current_color = 0
+    color_index = 0
 
     BLOB = 0
     TREE = 1
@@ -236,89 +236,145 @@ def main():
                 screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
 
             elif event.type == MOUSEMOTION:
-                if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
+                if pygame.mouse.get_pressed()[0] ^ pygame.mouse.get_pressed()[2]:
                     row = int((event.pos[1] - gr.top - bw)//(ts + lw))
                     col = int((event.pos[0] - gr.left - bw)//(ts + lw))
                     if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols and (row, col) != previous:
                         current = (row, col)
                         if pygame.mouse.get_pressed()[0]:
-                            if (colors[current_color], style) != (main_grid.at(current).color, main_grid.at(current).style):
-                                main_grid.disconnect(current, NORTH | EAST | SOUTH | WEST)
+                            if (colors[color_index], style) != (main_grid.at(current).color, main_grid.at(current).style):
+                                main_grid.erase(current)
+                                visited.discard(current)
                             if connection_mode == TREE:
                                 if current not in visited:
                                     adj = adjacency(current, previous)
                                     main_grid.connect(previous, adj)
                             elif connection_mode == BLOB:
-                                for direction in NORTH, EAST, SOUTH, WEST:
+                                for direction in NORTH, WEST, SOUTH, EAST:
                                     if near(current, direction) in visited:
                                         main_grid.connect(current, direction)
                             elif connection_mode == TRACE:
                                 adj = adjacency(current, previous)
                                 main_grid.connect(previous, adj)
-                            main_grid.put(current, colors[current_color], style)
+                            main_grid.put(current, colors[color_index], style)
                             visited.add(current)
                         else:
                             main_grid.erase(current)
-                            if current in visited:
-                                visited.remove(current)
+                            visited.discard(current)
                         previous = current
 
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
-                    current_color += 1
-                    current_color %= len(colors)
+                    color_index += 1
+                    color_index %= len(colors)
                 elif event.button == 5:
-                    current_color -= 1
-                    current_color %= len(colors)
-                else:
-                    row = int((event.pos[1] - gr.top - bw)//(ts + lw))
-                    col = int((event.pos[0] - gr.left - bw)//(ts + lw))
-                    if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols:
-                        current = (row, col)
-                        if event.button == 1:
-                            if (colors[current_color], style) != (main_grid.at(current).color, main_grid.at(current).style):
-                                main_grid.disconnect(current, NORTH | EAST | SOUTH | WEST)
-                            visited.add(current)
-                            previous = current
-                            main_grid.put(current, colors[current_color], style)
-                        elif event.button == 3:
-                            main_grid.erase(current)
-                            if current in visited:
-                                visited.remove(current)
+                    color_index -= 1
+                    color_index %= len(colors)
+                elif event.button == 1 or event.button == 3:
+                    if pygame.mouse.get_pressed()[0] and pygame.mouse.get_pressed()[2]:
+                        previous = (-1, -1)
+                    else:
+                        row = int((event.pos[1] - gr.top - bw)//(ts + lw))
+                        col = int((event.pos[0] - gr.left - bw)//(ts + lw))
+                        if 0 <= row < main_grid.nrows and 0 <= col < main_grid.ncols:
+                            current = (row, col)
+                            if event.button == 1:
+                                if (colors[color_index], style) != (main_grid.at(current).color, main_grid.at(current).style):
+                                    main_grid.erase(current)
+                                    visited.discard(current)
+                                visited.add(current)
+                                previous = current
+                                main_grid.put(current, colors[color_index], style)
+                            elif event.button == 3:
+                                main_grid.erase(current)
+                                visited.discard(current)
 
             elif event.type == KEYDOWN:
                 if event.unicode.isdigit():
                     digit = int(event.unicode)
                     if 1 <= digit <= len(colors):
-                        current_color = digit - 1
+                        color_index = digit - 1
                 elif event.key == pygame.K_q:
                     connection_mode = TREE
                 elif event.key == pygame.K_w:
                     connection_mode = BLOB
                 elif event.key == pygame.K_e:
                     connection_mode = TRACE
-                elif event.key == pygame.K_r:
+                elif event.key == pygame.K_i:
                     style = marks.PATH
-                elif event.key == pygame.K_t:
+                elif event.key == pygame.K_o:
                     style = marks.FILL
-                elif event.key == pygame.K_y:
+                elif event.key == pygame.K_p:
                     style = marks.FLAT
                 elif event.key == pygame.K_s:
                     if event.mod & pygame.KMOD_CTRL:
-                        if event.mod & pygame.KMOD_SHIFT:
-                            save_grid()
-                        else:
-                            gr = size.grid_rect(screen, main_grid)
-                            grid_surf = pygame.Surface((gr.width, gr.height))
-                            grid_surf.fill(WHITE)
-                            main_grid.draw(grid_surf,
-                                           (0, 0),
-                                           size.tile_size(screen, main_grid),
-                                           size.line_width(screen, main_grid),
-                                           size.border_width(screen, main_grid))
-                            pygame.image.save(grid_surf, "grids/img/latest.png")
+                        gr = size.grid_rect(screen, main_grid)
+                        grid_surf = pygame.Surface((gr.width, gr.height))
+                        grid_surf.fill(WHITE)
+                        main_grid.draw(grid_surf,
+                                       (0, 0),
+                                       size.tile_size(screen, main_grid),
+                                       size.line_width(screen, main_grid),
+                                       size.border_width(screen, main_grid))
+                        pygame.image.save(grid_surf, "grids/img/latest.png")
+                elif event.key == pygame.K_g:
+                    if event.mod & pygame.KMOD_CTRL:
+                        save_grid()
                 elif event.key == pygame.K_l:
-                    load_grid()
+                    if event.mod & pygame.KMOD_CTRL:
+                        load_grid()
+                elif event.key == pygame.K_UP:
+                    grid = main_grid.grid
+                    if event.mod & pygame.KMOD_SHIFT:
+                        if main_grid.nrows > MIN_SIZE:
+                            main_grid.nrows -= 1
+                            main_grid.grid = grid[1:]
+                            for j in range(main_grid.ncols):
+                                main_grid.disconnect((0, j), NORTH)
+                    elif main_grid.nrows < MAX_SIZE:
+                        main_grid.nrows += 1
+                        main_grid.grid = [[Tile() for j in range(main_grid.ncols)]] + grid
+                elif event.key == pygame.K_DOWN:
+                    grid = main_grid.grid
+                    if event.mod & pygame.KMOD_SHIFT:
+                        if main_grid.nrows > MIN_SIZE:
+                            main_grid.nrows -= 1
+                            main_grid.grid = grid[:-1]
+                            for j in range(main_grid.ncols):
+                                main_grid.disconnect((main_grid.nrows - 1, j), SOUTH)
+                    elif main_grid.nrows < MAX_SIZE:
+                        main_grid.nrows += 1
+                        main_grid.grid = grid + [[Tile() for j in range(main_grid.ncols)]]
+                elif event.key == pygame.K_RIGHT:
+                    grid = main_grid.grid
+                    if event.mod & pygame.KMOD_SHIFT:
+                        if main_grid.ncols > MIN_SIZE:
+                            for i in range(main_grid.nrows):
+                                grid[i].pop()
+                            main_grid.ncols -= 1
+                            main_grid.grid = grid
+                            for i in range(main_grid.nrows):
+                                main_grid.disconnect((i, main_grid.ncols - 1), EAST)
+                    elif main_grid.ncols < MAX_SIZE:
+                        for i in range(main_grid.nrows):
+                            grid[i].append(Tile())
+                        main_grid.ncols += 1
+                        main_grid.grid = grid
+                elif event.key == pygame.K_LEFT:
+                    grid = main_grid.grid
+                    if event.mod & pygame.KMOD_SHIFT:
+                        if main_grid.ncols > MIN_SIZE:
+                            for i in range(main_grid.nrows):
+                                grid[i] = grid[i][1:]
+                            main_grid.ncols -= 1
+                            main_grid.grid = grid
+                    elif main_grid.ncols < MAX_SIZE:
+                        for i in range(main_grid.nrows):
+                            grid[i] = [Tile()] + grid[i]
+                        main_grid.ncols += 1
+                        main_grid.grid = grid
+                        for i in range(main_grid.nrows):
+                            main_grid.disconnect((i, 0), WEST)
 
         screen.fill(WHITE)
 
@@ -328,7 +384,7 @@ def main():
                        size.line_width(screen, main_grid),
                        size.border_width(screen, main_grid))
 
-        draw_colors(screen, colors, current_color)
+        draw_colors(screen, colors, color_index)
 
         pygame.display.update()
 

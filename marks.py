@@ -38,41 +38,41 @@ def FILL(surf, color, pos, connections, ts, lw):
         hori_shade.fill((*WHITE, 70))
         surf.blit(hori_shade, tr.topleft)
         surf.blit(hori_border, (tr.left - lw, tr.top - lw))
-    if not connections & EAST:
-        vert_shade.fill((*WHITE, 70))
-        surf.blit(vert_shade, (tr.right - sw, tr.top))
-        surf.blit(vert_border, (tr.right, tr.top - lw))
-    if not connections & SOUTH:
-        hori_shade.fill((*BLACK, 40))
-        surf.blit(hori_shade, (tr.left, tr.bottom - sw))
-        surf.blit(hori_border, (tr.left - lw, tr.bottom))
     if connections & WEST:
         surf.blit(vert_cover, (tr.left - lw, tr.top))
     else:
         vert_shade.fill((*BLACK, 40))
         surf.blit(vert_shade, tr.topleft)
         surf.blit(vert_border, (tr.left - lw, tr.top - lw))
+    if not connections & SOUTH:
+        hori_shade.fill((*BLACK, 40))
+        surf.blit(hori_shade, (tr.left, tr.bottom - sw))
+        surf.blit(hori_border, (tr.left - lw, tr.bottom))
+    if not connections & EAST:
+        vert_shade.fill((*WHITE, 70))
+        surf.blit(vert_shade, (tr.right - sw, tr.top))
+        surf.blit(vert_border, (tr.right, tr.top - lw))
 
     # Corner boundary and shading.
     corner_shade = pygame.Surface((sw, sw), pygame.SRCALPHA)
     corner_border = pygame.Surface((lw, lw))
     corner_border.fill(BLACK)
-    if connections & NORTH and connections & EAST:
-        corner_shade.fill((*WHITE, 70))
-        surf.blit(corner_shade, (tr.right - sw, tr.top))
-        surf.blit(corner_border, (tr.right, tr.top - lw))
-    if connections & SOUTH and connections & EAST:
-        corner_shade.fill((*BLACK, 40))
-        surf.blit(corner_shade, (tr.right - sw, tr.bottom - sw))
-        surf.blit(corner_border, tr.bottomright)
-    if connections & SOUTH and connections & WEST:
-        corner_shade.fill((*BLACK, 40))
-        surf.blit(corner_shade, (tr.left, tr.bottom - sw))
-        surf.blit(corner_border, (tr.left - lw, tr.bottom))
     if connections & NORTH and connections & WEST:
         corner_shade.fill((*WHITE, 70))
         surf.blit(corner_shade, tr.topleft)
         surf.blit(corner_border, (tr.left - lw, tr.top - lw))
+    if connections & WEST and connections & SOUTH:
+        corner_shade.fill((*BLACK, 40))
+        surf.blit(corner_shade, (tr.left, tr.bottom - sw))
+        surf.blit(corner_border, (tr.left - lw, tr.bottom))
+    if connections & SOUTH and connections & EAST:
+        corner_shade.fill((*BLACK, 40))
+        surf.blit(corner_shade, (tr.right - sw, tr.bottom - sw))
+        surf.blit(corner_border, tr.bottomright)
+    if connections & EAST and connections & NORTH:
+        corner_shade.fill((*WHITE, 70))
+        surf.blit(corner_shade, (tr.right - sw, tr.top))
+        surf.blit(corner_border, (tr.right, tr.top - lw))
 
 
 # Node + Edges type of mark.
@@ -90,9 +90,9 @@ def PATH(surf, color, pos, connections, ts, lw):
     surf.blit(dot, (tr.left + (ts - ds)//2 + 1, tr.top + (ts - ds)//2 + 1))
     if connections & NORTH:
         pygame.draw.line(surf, color, tr.center, tr.midtop, ew)
-    if connections & EAST:
-        pygame.draw.line(surf, color, tr.center, tr.midright, ew)
-    if connections & SOUTH:
-        pygame.draw.line(surf, color, tr.center, tr.midbottom, ew)
     if connections & WEST:
         pygame.draw.line(surf, color, tr.center, tr.midleft, ew)
+    if connections & SOUTH:
+        pygame.draw.line(surf, color, tr.center, tr.midbottom, ew)
+    if connections & EAST:
+        pygame.draw.line(surf, color, tr.center, tr.midright, ew)
