@@ -20,7 +20,7 @@ def border_width(screen, grid):
     return max(int(ts / 15 + .5), 1)
 
 
-# Returns a Rect object for the grid.
+# Returns a Rect object for the grid. TODO: Lower "top" in case of a short and fat grid.
 def grid_rect(screen, grid):
     ts = tile_size(screen, grid)
     lw = line_width(screen, grid)
@@ -28,7 +28,7 @@ def grid_rect(screen, grid):
 
     width = (ts + lw) * grid.ncols - lw + 2*bw
     height = (ts + lw) * grid.nrows - lw + 2*bw
-    top = ts // 2
+    top = (screen.get_height() - height - 2*ts) // 2
     left = (screen.get_width() - width) // 2
 
     return pygame.Rect(left, top, width, height)
@@ -49,6 +49,7 @@ def color_gap(screen, grid, colors):
     return max(min(0.5, (screen.get_width() - cs/2)/len(colors)/cs - 1), 0.1)
 
 
+# Returns a Rect object for the color pallet.
 def color_rect(screen, grid, colors):
     cs = color_size(screen, grid, colors)
     gap = color_gap(screen, grid, colors)

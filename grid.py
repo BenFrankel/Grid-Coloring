@@ -23,29 +23,28 @@ class Tile:
         self.style = mark.FLAT
 
     def encode(self):
-        style_c = '?'
-        if self.style == mark.FLAT: style_c = 'O'
-        elif self.style == mark.PATH: style_c = '+'
-        elif self.style == mark.FILL: style_c = '#'
+        style = '?'
+        if self.style == mark.FLAT: style = 'O'
+        elif self.style == mark.PATH: style = '+'
+        elif self.style == mark.FILL: style = '#'
 
-        color_c = chr(self.color[0]) + chr(self.color[1]) + chr(self.color[2])
+        color = str(self.color[0]) + ',' + str(self.color[1]) + ',' + str(self.color[2])
 
-        cnnct_c = chr(self.connections)
+        connections = str(self.connections)
 
-        return style_c + color_c + cnnct_c
+        return style + ';' + color + ';' + connections
 
     @staticmethod
     def decode(s):
-        assert len(s) == 5
-
+        style_s, color_s, connections_s = s.split(';')
         style = mark.DEFAULT
-        if s[0] == 'O': style = mark.FLAT
-        elif s[0] == '+': style = mark.PATH
-        elif s[0] == '#': style = mark.FILL
+        if style_s == 'O': style = mark.FLAT
+        elif style_s == '+': style = mark.PATH
+        elif style_s == '#': style = mark.FILL
 
-        color = (ord(s[1]), ord(s[2]), ord(s[3]))
+        color = [int(x) for x in color_s.split(',')]
 
-        connections = ord(s[4])
+        connections = int(connections_s)
 
         return Tile(color, style, connections)
 
@@ -105,35 +104,32 @@ class Grid:
         self.disconnect(p, NORTH | WEST | SOUTH | EAST)
 
     def encode(self):
-        encoded = chr(self.nrows) + chr(self.ncols)
+        encoded = str(self.nrows) + ',' + str(self.ncols)
         for row in self.grid:
             for tile in row:
-                encoded += tile.encode()
+                encoded += '\n' + tile.encode()
         return encoded
 
     @staticmethod
     def decode(s):
-        assert len(s) >= 2
-
-        nrows = ord(s[0])
-        ncols = ord(s[1])
-
-        assert len(s) == 2 + 5*nrows*ncols
+        lines = s.splitlines()
+        nrows, ncols = lines[0].split(',')
+        nrows = int(nrows)
+        ncols = int(ncols)
 
         decoded = Grid(nrows, ncols)
         for i in range(nrows):
             for j in range(ncols):
-                tile_pos = 2 + 5*ncols*i + 5*j
-                decoded.set((i, j), Tile.decode(s[tile_pos:tile_pos + 5]))
+                decoded.set((i, j), Tile.decode(lines[ncols*i + j + 1]))
         return decoded
 
 
 def save_grid(grid):
-    f = open("grids/inf/latest.txt", 'w', encoding='utf-8')
+    f = open("grids/inf/latest.txt", 'w')
     f.write(grid.encode())
     f.close()
 
 
 def load_grid(name='latest'):
-    f = open("grids/inf/" + name + ".txt", encoding='utf-8')
+    f = open("grids/inf/" + name + ".txt")
     return Grid.decode(f.read())

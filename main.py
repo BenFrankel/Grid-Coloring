@@ -55,7 +55,6 @@ def main():
                                 visited.discard(current)
 
                             if connection_mode == TREE:
-                                print(visited, current)
                                 if current not in visited:
                                     adj = util.adjacency(current, previous)
                                     main_grid.connect(previous, adj)
@@ -129,7 +128,8 @@ def main():
                         gr = size.grid_rect(screen, main_grid)
                         grid_surf = pygame.Surface((gr.width, gr.height))
                         grid_surf.fill(WHITE)
-                        main_grid.draw(grid_surf,
+                        draw.draw_grid(grid_surf,
+                                       main_grid,
                                        (0, 0),
                                        size.tile_size(screen, main_grid),
                                        size.line_width(screen, main_grid),
