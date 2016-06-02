@@ -34,11 +34,11 @@ def grid_rect(screen, grid):
     return pygame.Rect(left, top, width, height)
 
 
-# Returns the pixel sidelength of a color square.
+# Returns the pixel sidelength of a color square. TODO: Reasonable size when tile_size is tiny.
 def color_size(screen, grid, colors):
     gr = grid_rect(screen, grid)
     cs = int(gr.width / grid.ncols * 0.8)
-    if (screen.get_width() - cs/2)/len(colors)/cs - 1 <= 0.1:
+    if (screen.get_width() - cs/2)/len(colors)/cs <= 1.1:
         cs = int(cs * 0.8)
     return cs
 
