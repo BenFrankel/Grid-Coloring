@@ -1,9 +1,9 @@
-import mark
+import tilemark
 from constants import *
 
 
 class Tile:
-    def __init__(self, color=WHITE, style=mark.FLAT, connections=0):
+    def __init__(self, color=WHITE, style=tilemark.FLAT, connections=0):
         self.color = color
         self.style = style
         self.connections = connections
@@ -20,13 +20,13 @@ class Tile:
 
     def erase(self):
         self.color = WHITE
-        self.style = mark.FLAT
+        self.style = tilemark.FLAT
 
     def encode(self):
         style = '?'
-        if self.style == mark.FLAT: style = 'O'
-        elif self.style == mark.PATH: style = '+'
-        elif self.style == mark.FILL: style = '#'
+        if self.style == tilemark.FLAT: style = 'O'
+        elif self.style == tilemark.PATH: style = '+'
+        elif self.style == tilemark.FILL: style = '#'
 
         color = str(self.color[0]) + ',' + str(self.color[1]) + ',' + str(self.color[2])
 
@@ -37,10 +37,10 @@ class Tile:
     @staticmethod
     def decode(s):
         style_s, color_s, connections_s = s.split(';')
-        style = mark.DEFAULT
-        if style_s == 'O': style = mark.FLAT
-        elif style_s == '+': style = mark.PATH
-        elif style_s == '#': style = mark.FILL
+        style = tilemark.DEFAULT
+        if style_s == 'O': style = tilemark.FLAT
+        elif style_s == '+': style = tilemark.PATH
+        elif style_s == '#': style = tilemark.FILL
 
         color = [int(x) for x in color_s.split(',')]
 

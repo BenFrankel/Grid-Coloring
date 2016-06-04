@@ -1,9 +1,9 @@
 import pygame
 from pygame.locals import VIDEORESIZE, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, KEYDOWN, KEYUP, QUIT
 from grid import *
-import mark
-import size
-import util
+import tilemark
+import displaysize
+import gridutil
 import draw
 
 
@@ -24,18 +24,16 @@ def main():
     TRACE = 2
     connection_mode = TRACE
 
-    style = mark.DEFAULT
+    style = tilemark.DEFAULT
 
     visited = set()
     previous = (-1, -1)
 
-    # BUG: When you change color or marking style mid-paint, an invalid connection will be made.
-
     while True:
-        gr = size.grid_rect(screen, main_grid)
-        ts = size.tile_size(screen, main_grid)
-        lw = size.line_width(screen, main_grid)
-        bw = size.border_width(screen, main_grid)
+        gr = displaysize.grid_rect(screen, main_grid)
+        ts = displaysize.tile_size(screen, main_grid)
+        lw = displaysize.line_width(screen, main_grid)
+        bw = displaysize.border_width(screen, main_grid)
         for event in pygame.event.get():
             if event.type == QUIT:
                 exit()
@@ -56,16 +54,16 @@ def main():
 
                             if connection_mode == TREE:
                                 if current not in visited:
-                                    adj = util.adjacency(current, previous)
+                                    adj = gridutil.adjacency(current, previous)
                                     main_grid.connect(previous, adj)
 
                             elif connection_mode == BLOB:
                                 for direction in NORTH, WEST, SOUTH, EAST:
-                                    if util.near(current, direction) in visited:
+                                    if gridutil.near(current, direction) in visited:
                                         main_grid.connect(current, direction)
 
                             elif connection_mode == TRACE:
-                                adj = util.adjacency(current, previous)
+                                adj = gridutil.adjacency(current, previous)
                                 main_grid.connect(previous, adj)
 
                             main_grid.put(current, colors[color_index], style)
@@ -115,25 +113,25 @@ def main():
                     connection_mode = TRACE
 
                 elif event.key == pygame.K_i:
-                    style = mark.PATH
+                    style = tilemark.PATH
 
                 elif event.key == pygame.K_o:
-                    style = mark.FILL
+                    style = tilemark.FILL
 
                 elif event.key == pygame.K_p:
-                    style = mark.FLAT
+                    style = tilemark.FLAT
 
                 elif event.key == pygame.K_s:
                     if event.mod & pygame.KMOD_CTRL:
-                        gr = size.grid_rect(screen, main_grid)
+                        gr = displaysize.grid_rect(screen, main_grid)
                         grid_surf = pygame.Surface((gr.width, gr.height))
                         grid_surf.fill(WHITE)
                         draw.draw_grid(grid_surf,
                                        main_grid,
                                        (0, 0),
-                                       size.tile_size(screen, main_grid),
-                                       size.line_width(screen, main_grid),
-                                       size.border_width(screen, main_grid))
+                                       displaysize.tile_size(screen, main_grid),
+                                       displaysize.line_width(screen, main_grid),
+                                       displaysize.border_width(screen, main_grid))
                         pygame.image.save(grid_surf, "grids/img/latest.png")
 
                 elif event.key == pygame.K_g:
@@ -146,7 +144,7 @@ def main():
                         visited = set()
                         for i in range(main_grid.nrows):
                             for j in range(main_grid.ncols):
-                                if main_grid.at(i, j).color != WHITE or main_grid.at(i, j).style != mark.DEFAULT:
+                                if main_grid.at(i, j).color != WHITE or main_grid.at(i, j).style != tilemark.DEFAULT:
                                     visited.add((i, j))
 
                 elif event.key == pygame.K_UP:
@@ -209,16 +207,16 @@ def main():
 
         draw.draw_grid(screen,
                        main_grid,
-                       size.grid_rect(screen, main_grid).topleft,
-                       size.tile_size(screen, main_grid),
-                       size.line_width(screen, main_grid),
-                       size.border_width(screen, main_grid))
+                       displaysize.grid_rect(screen, main_grid).topleft,
+                       displaysize.tile_size(screen, main_grid),
+                       displaysize.line_width(screen, main_grid),
+                       displaysize.border_width(screen, main_grid))
 
         draw.draw_colors(screen,
                          main_grid,
-                         size.color_rect(screen, main_grid, colors).topleft,
-                         size.color_size(screen, main_grid, colors),
-                         size.color_gap(screen, main_grid, colors),
+                         displaysize.color_rect(screen, main_grid, colors).topleft,
+                         displaysize.color_size(screen, main_grid, colors),
+                         displaysize.color_gap(screen, main_grid, colors),
                          colors,
                          color_index)
 
