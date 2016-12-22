@@ -4,60 +4,60 @@ import pygame
 
 
 # Returns the pixel sidelength of a tile.
-def tile_size(screen, grid):
-    return max(int(min(screen.get_width() / (grid.ncols+2), screen.get_height() / (grid.nrows+4)) - .5), 1)
+def tile_size(dim, grid):
+    return max(int(min(dim[0] / (grid.ncols+2), dim[1] / (grid.nrows+4)) - .5), 1)
 
 
 # Returns the pixel width of a line.
-def line_width(screen, grid):
-    ts = tile_size(screen, grid)
+def line_width(dim, grid):
+    ts = tile_size(dim, grid)
     return max(int(ts / 32 + .5), 1)
 
 
 # Returns the pixel width of the border.
-def border_width(screen, grid):
-    ts = tile_size(screen, grid)
+def border_width(dim, grid):
+    ts = tile_size(dim, grid)
     return max(int(ts / 15 + .5), 1)
 
 
 # Returns a Rect object for the grid. TODO: Lower "top" in case of a short and fat grid.
-def grid_rect(screen, grid):
-    ts = tile_size(screen, grid)
-    lw = line_width(screen, grid)
-    bw = border_width(screen, grid)
+def grid_rect(dim, grid):
+    ts = tile_size(dim, grid)
+    lw = line_width(dim, grid)
+    bw = border_width(dim, grid)
 
     width = (ts + lw) * grid.ncols - lw + 2*bw
     height = (ts + lw) * grid.nrows - lw + 2*bw
-    top = (screen.get_height() - height - 2*ts) // 2
-    left = (screen.get_width() - width) // 2
+    top = (dim[1] - height - 2*ts) // 2
+    left = (dim[0] - width) // 2
 
     return pygame.Rect(left, top, width, height)
 
 
 # Returns the pixel sidelength of a color square. TODO: Reasonable size when tile_size is tiny.
-def color_size(screen, grid, colors):
-    gr = grid_rect(screen, grid)
+def color_size(dim, grid, colors):
+    gr = grid_rect(dim, grid)
     cs = int(gr.width / grid.ncols * 0.8)
-    if (screen.get_width() - cs/2)/len(colors)/cs <= 1.1:
+    if (dim[0] - cs/2)/len(colors)/cs <= 1.1:
         cs = int(cs * 0.8)
     return cs
 
 
 # Returns the proportional size of the gap between color squares (proportional to color_size).
-def color_gap(screen, grid, colors):
-    cs = color_size(screen, grid, colors)
-    return max(min(0.5, (screen.get_width() - cs/2)/len(colors)/cs - 1), 0.1)
+def color_gap(dim, grid, colors):
+    cs = color_size(dim, grid, colors)
+    return max(min(0.5, (dim[0] - cs/2)/len(colors)/cs - 1), 0.1)
 
 
 # Returns a Rect object for the color pallet.
-def color_rect(screen, grid, colors):
-    cs = color_size(screen, grid, colors)
-    gap = color_gap(screen, grid, colors)
-    gr = grid_rect(screen, grid)
+def color_rect(dim, grid, colors):
+    cs = color_size(dim, grid, colors)
+    gap = color_gap(dim, grid, colors)
+    gr = grid_rect(dim, grid)
 
     width = cs*(1+gap)*len(colors) - cs*gap
     height = cs
-    top = (screen.get_height() + gr.bottom - height)//2
-    left = (screen.get_width() - width)//2
+    top = (dim[1] + gr.bottom - height)//2
+    left = (dim[0] - width)//2
 
     return pygame.Rect(left, top, width, height)

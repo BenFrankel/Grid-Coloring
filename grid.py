@@ -1,3 +1,5 @@
+import pickle
+
 import tilemark
 from constants import *
 
@@ -22,32 +24,6 @@ class Tile:
         self.color = WHITE
         self.style = tilemark.FLAT
 
-    def encode(self):
-        style = '?'
-        if self.style == tilemark.FLAT: style = 'O'
-        elif self.style == tilemark.PATH: style = '+'
-        elif self.style == tilemark.FILL: style = '#'
-
-        color = str(self.color[0]) + ',' + str(self.color[1]) + ',' + str(self.color[2])
-
-        connections = str(self.connections)
-
-        return style + ';' + color + ';' + connections
-
-    @staticmethod
-    def decode(s):
-        style_s, color_s, connections_s = s.split(';')
-        style = tilemark.DEFAULT
-        if style_s == 'O': style = tilemark.FLAT
-        elif style_s == '+': style = tilemark.PATH
-        elif style_s == '#': style = tilemark.FILL
-
-        color = [int(x) for x in color_s.split(',')]
-
-        connections = int(connections_s)
-
-        return Tile(color, style, connections)
-
 
 class Grid:
     def __init__(self, nrows, ncols):
@@ -56,8 +32,6 @@ class Grid:
         self.grid = [[Tile() for i in range(ncols)] for j in range(nrows)]
 
     def at(self, *args):
-        assert 1 <= len(args) <= 2
-
         if len(args) == 1:
             return self.grid[args[0][0]][args[0][1]]
         elif len(args) == 2:
@@ -85,9 +59,6 @@ class Grid:
             self.grid[p[0]][p[1] + 1].connect(WEST)
 
     def disconnect(self, p, direction):
-        if not 1 <= direction <= 15:
-            return
-
         self.at(p).disconnect(direction)
 
         if direction & NORTH and p[0] > 0:
@@ -103,33 +74,13 @@ class Grid:
         self.at(p).erase()
         self.disconnect(p, NORTH | WEST | SOUTH | EAST)
 
-    def encode(self):
-        encoded = str(self.nrows) + ',' + str(self.ncols)
-        for row in self.grid:
-            for tile in row:
-                encoded += '\n' + tile.encode()
-        return encoded
-
-    @staticmethod
-    def decode(s):
-        lines = s.splitlines()
-        nrows, ncols = lines[0].split(',')
-        nrows = int(nrows)
-        ncols = int(ncols)
-
-        decoded = Grid(nrows, ncols)
-        for i in range(nrows):
-            for j in range(ncols):
-                decoded.set((i, j), Tile.decode(lines[ncols*i + j + 1]))
-        return decoded
-
 
 def save_grid(grid):
-    f = open("grids/inf/latest.txt", 'w')
-    f.write(grid.encode())
-    f.close()
+    with open("grids/inf/latest.txt", 'wb') as f:
+        pickle.dump(grid, f)
+        f.close()
 
 
 def load_grid(name='latest'):
-    f = open("grids/inf/" + name + ".txt")
-    return Grid.decode(f.read())
+    with open("grids/inf/" + name + ".txt", 'rb') as f:
+        return pickle.load(f)
