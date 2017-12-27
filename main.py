@@ -1,19 +1,18 @@
-import threading
-import pygame
-from pygame.locals import VIDEORESIZE, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, KEYDOWN, KEYUP, QUIT
-from grid import *
-import tilemark
-import displaysize
-import gridutil
+from grid import Tile, Grid, save_grid, load_grid
+import mark
+import size
+import util
 import draw
+from const import *
+
+import pygame
 
 
 pygame.init()
 
 
-class MainScreen(threading.Thread):
+class MainScreen:
     def __init__(self):
-        threading.Thread.__init__(self, daemon=True)
         self.dim = (600, 400)
         self.surf = pygame.Surface(self.dim)
         self.buffer = pygame.Surface(self.dim)
@@ -34,16 +33,16 @@ class MainScreen(threading.Thread):
 
         draw.draw_grid(self.buffer,
                        self.main_grid,
-                       displaysize.grid_rect(self.dim, self.main_grid).topleft,
-                       displaysize.tile_size(self.dim, self.main_grid),
-                       displaysize.line_width(self.dim, self.main_grid),
-                       displaysize.border_width(self.dim, self.main_grid))
+                       size.grid_rect(self.dim, self.main_grid).topleft,
+                       size.tile_size(self.dim, self.main_grid),
+                       size.line_width(self.dim, self.main_grid),
+                       size.border_width(self.dim, self.main_grid))
 
         draw.draw_colors(self.buffer,
                          self.main_grid,
-                         displaysize.color_rect(self.dim, self.main_grid, self.colors).topleft,
-                         displaysize.color_size(self.dim, self.main_grid, self.colors),
-                         displaysize.color_gap(self.dim, self.main_grid, self.colors),
+                         size.color_rect(self.dim, self.main_grid, self.colors).topleft,
+                         size.color_size(self.dim, self.main_grid, self.colors),
+                         size.color_gap(self.dim, self.main_grid, self.colors),
                          self.colors,
                          self.color_index)
 
@@ -64,20 +63,20 @@ def main():
     TRACE = 2
     connection_mode = TRACE
 
-    style = tilemark.DEFAULT
+    style = mark.DEFAULT
 
     visited = set()
     previous = (-1, -1)
 
     screen = pygame.display.set_mode(window.dim, pygame.RESIZABLE)
     pygame.display.set_caption("Grid Coloring")
-    window.start()
+    window.run()
 
     while True:
-        gr = displaysize.grid_rect(window.dim, window.main_grid)
-        ts = displaysize.tile_size(window.dim, window.main_grid)
-        lw = displaysize.line_width(window.dim, window.main_grid)
-        bw = displaysize.border_width(window.dim, window.main_grid)
+        gr = size.grid_rect(window.dim, window.main_grid)
+        ts = size.tile_size(window.dim, window.main_grid)
+        lw = size.line_width(window.dim, window.main_grid)
+        bw = size.border_width(window.dim, window.main_grid)
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -101,16 +100,16 @@ def main():
 
                             if connection_mode == TREE:
                                 if current not in visited:
-                                    adj = gridutil.adjacency(current, previous)
+                                    adj = util.adjacency(current, previous)
                                     window.main_grid.connect(previous, adj)
 
                             elif connection_mode == BLOB:
                                 for direction in NORTH, WEST, SOUTH, EAST:
-                                    if gridutil.near(current, direction) in visited:
+                                    if util.near(current, direction) in visited:
                                         window.main_grid.connect(current, direction)
 
                             elif connection_mode == TRACE:
-                                adj = gridutil.adjacency(current, previous)
+                                adj = util.adjacency(current, previous)
                                 window.main_grid.connect(previous, adj)
 
                             window.main_grid.put(current, window.colors[window.color_index], style)
@@ -161,25 +160,25 @@ def main():
                     connection_mode = TRACE
 
                 elif event.key == pygame.K_i:
-                    style = tilemark.PATH
+                    style = mark.PATH
 
                 elif event.key == pygame.K_o:
-                    style = tilemark.FILL
+                    style = mark.FILL
 
                 elif event.key == pygame.K_p:
-                    style = tilemark.FLAT
+                    style = mark.FLAT
 
                 elif event.key == pygame.K_s:
                     if event.mod & pygame.KMOD_CTRL:
-                        gr = displaysize.grid_rect(window.dim, window.main_grid)
+                        gr = size.grid_rect(window.dim, window.main_grid)
                         grid_surf = pygame.Surface((gr.width, gr.height))
                         grid_surf.fill(WHITE)
                         draw.draw_grid(grid_surf,
                                        window.main_grid,
                                        (0, 0),
-                                       displaysize.tile_size(window.dim, window.main_grid),
-                                       displaysize.line_width(window.dim, window.main_grid),
-                                       displaysize.border_width(window.dim, window.main_grid))
+                                       size.tile_size(window.dim, window.main_grid),
+                                       size.line_width(window.dim, window.main_grid),
+                                       size.border_width(window.dim, window.main_grid))
                         pygame.image.save(grid_surf, "grids/img/latest.png")
 
                 elif event.key == pygame.K_g:
@@ -192,7 +191,7 @@ def main():
                         visited = set()
                         for i in range(window.main_grid.nrows):
                             for j in range(window.main_grid.ncols):
-                                if window.main_grid.at(i, j).color != WHITE or window.main_grid.at(i, j).style != tilemark.DEFAULT:
+                                if window.main_grid.at(i, j).color != WHITE or window.main_grid.at(i, j).style != mark.DEFAULT:
                                     visited.add((i, j))
 
                 elif event.key == pygame.K_UP:

@@ -1,11 +1,11 @@
 import pickle
 
-import tilemark
-from constants import *
+import mark
+from const import *
 
 
 class Tile:
-    def __init__(self, color=WHITE, style=tilemark.FLAT, connections=0):
+    def __init__(self, color=WHITE, style=mark.FLAT, connections=0):
         self.color = color
         self.style = style
         self.connections = connections
@@ -22,7 +22,7 @@ class Tile:
 
     def erase(self):
         self.color = WHITE
-        self.style = tilemark.FLAT
+        self.style = mark.FLAT
 
 
 class Grid:

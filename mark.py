@@ -1,26 +1,25 @@
+"""
+This file contains tile marking styles.
+A tile marking style takes a surface, a position, a color, a set of connections, a tile size, and a line width.
+It then draws a marking corresponding to these arguments on the surface at the given position.
+"""
+
 import pygame
-from constants import *
-
-# The following functions are the different marking styles.
-# They take as arguments the surface being drawn onto, the tile's position, the tile's color,
-# the tile's connections, the tile's size, and the line width.
-# Then the functions draw their respective markings from these arguments.
+from const import *
 
 
-# Plain color fill.
+# Simple fill
 def FLAT(surf, pos, color, connections, ts, lw):
     tile_rect = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     pygame.draw.rect(surf, color, tile_rect)
 
-DEFAULT = FLAT
 
-
-# Color fill with borders and shading.
+# Tetris-like markings
 def FILL(surf, pos, color, connections, ts, lw):
     tr = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     pygame.draw.rect(surf, color, pygame.Rect(pos[0], pos[1], ts + 2*lw, ts + 2*lw))
 
-    # Edge boundary and shading.
+    # Edge boundary and shading
     sw = 2 * lw
     hori_shade = pygame.Surface((tr.width, sw), pygame.SRCALPHA)
     vert_shade = pygame.Surface((sw, tr.height), pygame.SRCALPHA)
@@ -53,7 +52,7 @@ def FILL(surf, pos, color, connections, ts, lw):
         surf.blit(vert_shade, (tr.right - sw, tr.top))
         surf.blit(vert_border, (tr.right, tr.top - lw))
 
-    # Corner boundary and shading.
+    # Corner boundary and shading
     corner_shade = pygame.Surface((sw, sw), pygame.SRCALPHA)
     corner_border = pygame.Surface((lw, lw))
     corner_border.fill(BLACK)
@@ -75,7 +74,7 @@ def FILL(surf, pos, color, connections, ts, lw):
         surf.blit(corner_border, (tr.right, tr.top - lw))
 
 
-# Node + Edges type of mark.
+# Ball and stick (graph-like markings)
 def PATH(surf, pos, color, connections, ts, lw):
     tr = pygame.Rect(pos[0] + lw, pos[1] + lw, ts, ts)
     ds = int(ts / 7 + .5)
@@ -96,3 +95,6 @@ def PATH(surf, pos, color, connections, ts, lw):
         pygame.draw.line(surf, color, tr.center, tr.midbottom, ew)
     if connections & EAST:
         pygame.draw.line(surf, color, tr.center, tr.midright, ew)
+
+
+DEFAULT = FLAT
