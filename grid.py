@@ -136,12 +136,12 @@ class Grid(hgf.SimpleWidget):
                     self.put(current, self.color, self.mark)
 
     def on_mouse_motion(self, start, end, buttons, start_hovered, end_hovered):
-        if pygame.mouse.get_pressed()[0] != pygame.mouse.get_pressed()[2]:
+        if buttons[0] != buttons[2]:
             row = int((end[1] - self._bw) // (self._ts + self._lw))
             col = int((end[0] - self._bw) // (self._ts + self._lw))
             if 0 <= row < self.nrows and 0 <= col < self.ncols and (row, col) != self._previous:
-                current = (row, col)
-                if pygame.mouse.get_pressed()[0]:
+                current = row, col
+                if buttons[0]:
                     if self.color != self.at(current).color \
                             or self.mark != self.at(current).mark:
                         self.erase(current)
