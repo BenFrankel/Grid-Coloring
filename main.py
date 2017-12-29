@@ -1,24 +1,8 @@
-from grid import Tile, Grid, save_grid, load_grid
-import mark
 import size
 import util
-import draw
 from const import *
 
 import pygame
-
-
-class MainScreen:
-    def __init__(self):
-        self.dim = (600, 400)
-        self.surf = pygame.Surface(self.dim)
-        self.buffer = pygame.Surface(self.dim)
-        self.main_grid = Grid(NUM_ROWS, NUM_COLS)
-        self.colors = (BLACK, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE)
-        self.color_index = 0
-
-    def draw(self):
-        self.buffer.fill(WHITE)
 
 
 while True:
@@ -27,39 +11,7 @@ while True:
     lw = size.line_width(window.dim, window.main_grid)
     bw = size.border_width(window.dim, window.main_grid)
 
-    for event in pygame.event.get():
-        if event.type == pygame.MOUSEMOTION:
-            if pygame.mouse.get_pressed()[0] != pygame.mouse.get_pressed()[2]:
-                row = int((event.pos[1] - gr.top - bw)//(ts + lw))
-                col = int((event.pos[0] - gr.left - bw)//(ts + lw))
-                if 0 <= row < window.main_grid.nrows and 0 <= col < window.main_grid.ncols and (row, col) != previous:
-                    current = (row, col)
-                    if pygame.mouse.get_pressed()[0]:
-                        if window.colors[window.color_index] != window.main_grid.at(current).color \
-                                or style != window.main_grid.at(current).style:
-                            window.main_grid.erase(current)
-                            visited.discard(current)
-
-                        if connection_mode == TREE:
-                            if current not in visited:
-                                adj = util.adjacency(current, previous)
-                                window.main_grid.connect(previous, adj)
-
-                        elif connection_mode == BLOB:
-                            for direction in NORTH, WEST, SOUTH, EAST:
-                                if util.near(current, direction) in visited:
-                                    window.main_grid.connect(current, direction)
-
-                        elif connection_mode == TRACE:
-                            adj = util.adjacency(current, previous)
-                            window.main_grid.connect(previous, adj)
-
-                        window.main_grid.put(current, window.colors[window.color_index], style)
-                        visited.add(current)
-                    else:
-                        window.main_grid.erase(current)
-                        visited.discard(current)
-                    previous = current
+    # for event in pygame.event.get():
 
         # elif event.type == pygame.KEYDOWN:
         #     if event.key == pygame.K_g:

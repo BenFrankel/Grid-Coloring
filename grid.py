@@ -1,4 +1,4 @@
-import mark
+import util
 from const import *
 
 import hgf
@@ -64,7 +64,7 @@ class Grid(hgf.SimpleWidget):
 
         self.connection_mode = Grid.TRACE
         self._marks = None
-        self.mark = 0
+        self.mark = None
 
         self._visited = set()
         self._previous = (-1, -1)
@@ -83,10 +83,12 @@ class Grid(hgf.SimpleWidget):
     def load_style(self):
         self._bg_factory = self.style_get('background')
         self._marks = self.style_get('marks')
+        if self.mark is None:
+            self.mark = self._marks[2]
         for row in self.grid:
             for tile in row:
                 if tile.mark is None:
-                    tile.mark = self._marks[self.mark]
+                    tile.mark = self.mark
 
     def refresh_proportions(self):
         super().refresh_proportions()
@@ -125,13 +127,46 @@ class Grid(hgf.SimpleWidget):
                 current = (row, col)
                 if button == 3 \
                         or self.color != self.at(current).color \
-                        or self._marks[self.mark] != self.at(current).style:
+                        or self.mark != self.at(current).mark:
                     self.erase(current)
                     self._visited.discard(current)
                 if button == 1:
                     self._visited.add(current)
                     self._previous = current
-                    self.put(current, self.color, self._marks[self.mark])
+                    self.put(current, self.color, self.mark)
+
+    def on_mouse_motion(self, start, end, buttons, start_hovered, end_hovered):
+        if pygame.mouse.get_pressed()[0] != pygame.mouse.get_pressed()[2]:
+            row = int((end[1] - self._bw) // (self._ts + self._lw))
+            col = int((end[0] - self._bw) // (self._ts + self._lw))
+            if 0 <= row < self.nrows and 0 <= col < self.ncols and (row, col) != self._previous:
+                current = (row, col)
+                if pygame.mouse.get_pressed()[0]:
+                    if self.color != self.at(current).color \
+                            or self.mark != self.at(current).mark:
+                        self.erase(current)
+                        self._visited.discard(current)
+
+                    if self.connection_mode == Grid.TREE:
+                        if current not in self._visited:
+                            adj = util.adjacency(current, self._previous)
+                            self.connect(self._previous, adj)
+
+                    elif self.connection_mode == Grid.BLOB:
+                        for direction in NORTH, WEST, SOUTH, EAST:
+                            if util.near(current, direction) in self._visited:
+                                self.connect(current, direction)
+
+                    elif self.connection_mode == Grid.TRACE:
+                        adj = util.adjacency(current, self._previous)
+                        self.connect(self._previous, adj)
+
+                    self.put(current, self.color, self.mark)
+                    self._visited.add(current)
+                else:
+                    self.erase(current)
+                    self._visited.discard(current)
+                self._previous = current
 
     def on_key_down(self, unicode, key, mod):
         if key == pygame.K_q:

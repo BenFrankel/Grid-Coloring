@@ -78,6 +78,8 @@ def fill_mark(color, connections, ts, lw):
         surf.blit(corner_shade, (tr.right - sw, lw))
         surf.blit(corner_border, (tr.right, 0))
 
+    return surf
+
 
 # Ball and stick (graph-like markings)
 def path_mark(color, connections, ts, lw):
@@ -102,6 +104,8 @@ def path_mark(color, connections, ts, lw):
         pygame.draw.line(surf, color, tr.center, tr.midbottom, ew)
     if connections & EAST:
         pygame.draw.line(surf, color, tr.center, tr.midright, ew)
+
+    return surf
 
 
 def grid_bg(size, nrows, ncols, bw, lw, ts):
