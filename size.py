@@ -5,7 +5,7 @@ import pygame
 
 # Returns the pixel sidelength of a tile
 def tile_size(dim, grid):
-    return max(int(min(dim[0] / (grid.ncols+2), dim[1] / (grid.nrows+4)) - .5), 1)
+    return max(int(min(dim[0] / (grid.ncols + 2), dim[1] / (grid.nrows + 4)) - .5), 1)
 
 
 # Returns the pixel width of a line
@@ -26,38 +26,38 @@ def grid_rect(dim, grid):
     lw = line_width(dim, grid)
     bw = border_width(dim, grid)
 
-    width = (ts + lw) * grid.ncols - lw + 2*bw
-    height = (ts + lw) * grid.nrows - lw + 2*bw
-    top = (dim[1] - height - 2*ts) // 2
+    width = (ts + lw) * grid.ncols - lw + 2 * bw
+    height = (ts + lw) * grid.nrows - lw + 2 * bw
+    top = (dim[1] - height - 2 * ts) // 2
     left = (dim[0] - width) // 2
 
     return pygame.Rect(left, top, width, height)
 
 
 # Returns the pixel sidelength of a color square TODO: Reasonable size when tile_size is tiny
-def color_size(dim, grid, colors):
+def splotch_size(dim, grid, num_colors):
     gr = grid_rect(dim, grid)
     cs = int(gr.width / grid.ncols * 0.8)
-    if (dim[0] - cs/2)/len(colors)/cs <= 1.1:
+    if (dim[0] - cs / 2) / num_colors / cs <= 1.1:
         cs = int(cs * 0.8)
     return cs
 
 
 # Returns the proportional size of the gap between color squares (proportional to color_size)
-def color_gap(dim, grid, colors):
-    cs = color_size(dim, grid, colors)
-    return max(min(0.5, (dim[0] - cs/2)/len(colors)/cs - 1), 0.1)
+def splotch_gap(dim, grid, num_colors):
+    cs = splotch_size(dim, grid, num_colors)
+    return max(min(0.5, (dim[0] - cs/2) / num_colors / cs - 1), 0.1)
 
 
-# Returns a Rect object for the color pallet
-def color_rect(dim, grid, colors):
-    cs = color_size(dim, grid, colors)
-    gap = color_gap(dim, grid, colors)
+# Returns a Rect object for the color palette
+def palette_rect(dim, grid, num_colors):
+    cs = splotch_size(dim, grid, num_colors)
+    gap = splotch_gap(dim, grid, num_colors)
     gr = grid_rect(dim, grid)
 
-    width = cs * ((1 + gap) * len(colors) - gap)
+    width = cs * ((1 + gap) * num_colors - gap)
     height = cs
     top = (dim[1] + gr.bottom - height) // 2
-    left = (dim[0] - width)//2
+    left = (dim[0] - width) // 2
 
     return pygame.Rect(left, top, width, height)
