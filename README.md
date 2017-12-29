@@ -1,38 +1,47 @@
 # Grid Coloring
 
-Whenever a problem I'm working on involves a square grid, I draw some nearly straight lines on a piece of paper with a pen and then do my work on it with a pencil. The primary benefit of replicating this process digitally is the ability to easily save and share final or intermediate images.
+When a problem I'm working on involves a square grid, I draw some straight (citation needed) lines on a piece of paper with a pen and then do my work on it with a pencil. The primary benefit of replicating this process digitally is the ability to easily save and share final or intermediate images. It also looks prettier.
+
+## Examples
+
+TODO
 
 ## Controls
 
-```
-1-8:         Select color
-Mouse Wheel: Scroll through colors
+**Palette**
 
-Connection Mode
-Q: Tree
-W: Blob
-E: Trace (default)
+- Select color: 1-8
+- Scroll through colors: Mouse wheel
 
-Marking Type
-I: Path
-O: Fill
-P: Flat  (default)
+**Drawing**
 
-Resizing
-Up:          Add an empty row to the top
-Down:        Add an empty row to the bottom
-Left:        Add an empty column to the left
-Right:       Add an empty column to the right
-Shift+Up:    Remove the top row
-Shift+Down:  Remove the bottom row
-Shift+Left:  Remove the leftmost column
-Shift+Right: Remove the rightmost column
+- Click and drag: Draw
+- Right click and drag: Erase
+- Shift-click: Fill component
+- Shift-right click: Erase component
 
-Saving
-CTRL+S: Save the image
-CTRL+G: Save the grid
-CTRL+L: Load the last saved grid
-```
+**Connection Mode**
+
+- Tree: Q
+- Blob: W
+- Trace: E
+
+**Marking Style**
+
+- Graph: I
+- Pretty: O
+- Flat: P
+
+**Resizing**
+
+- Arrow key: Add an empty row or column in the direction pressed
+- Shift-arrow key: Remove a row or column in the direction pressed
+
+**Saving**
+
+- Save image: Ctrl-S
+- Save grid: Ctrl-G
+- Load grid: Ctrl-L
 
 ## Dependencies
 

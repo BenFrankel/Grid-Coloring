@@ -88,11 +88,10 @@ class Grid(hgf.SimpleWidget):
         self._bg_factory = self.style_get('background')
         self._marks = self.style_get('marks')
         if self.mark is None:
-            self.mark = self._marks[2]
+            self.mark = self._marks[1]
         for row in self.grid:
             for tile in row:
-                if tile.mark is None:
-                    tile.mark = self.mark
+                tile.mark = self._marks[0]
 
     def refresh_proportions(self):
         super().refresh_proportions()
@@ -121,56 +120,69 @@ class Grid(hgf.SimpleWidget):
         )
 
     def on_mouse_down(self, pos, button, hovered):
-        if pygame.mouse.get_pressed()[0] and pygame.mouse.get_pressed()[2]:
+        if pygame.mouse.get_pressed()[0] == pygame.mouse.get_pressed()[2]:
             self._previous = (-1, -1)
             return
-        if button == 1 or button == 3:
-            row = int((pos[1] - self._bw) // (self._ts + self._lw))
-            col = int((pos[0] - self._bw) // (self._ts + self._lw))
-            if 0 <= row < self.nrows and 0 <= col < self.ncols:
-                current = (row, col)
-                if button == 3 \
-                        or self.color != self.at(current).color \
-                        or self.mark != self.at(current).mark:
-                    self.erase(current)
-                    self._visited.discard(current)
-                if button == 1:
-                    self._visited.add(current)
-                    self._previous = current
-                    self.put(current, self.color, self.mark)
+        if button != 1 and button != 3:
+            return
+        row = int((pos[1] - self._bw) // (self._ts + self._lw))
+        col = int((pos[0] - self._bw) // (self._ts + self._lw))
+        if not (0 <= row < self.nrows and 0 <= col < self.ncols):
+            return
+        current = (row, col)
+        if pygame.key.get_mods() & pygame.KMOD_SHIFT and self.at(current).color != WHITE:
+            if button == 3:
+                for p in self.flood_set(current):
+                    self.erase(p)
+                    self._visited.discard(p)
+            else:
+                for p in self.flood_set(current):
+                    self._visited.add(p)
+                    self.put(p, self.color, self.mark)
+        else:
+            if button == 3 \
+                    or self.color != self.at(current).color \
+                    or self.mark != self.at(current).mark:
+                self.erase(current)
+                self._visited.discard(current)
+            if button == 1:
+                self._visited.add(current)
+                self.put(current, self.color, self.mark)
+                self._previous = current
 
     def on_mouse_motion(self, start, end, buttons, start_hovered, end_hovered):
-        if buttons[0] != buttons[2]:
-            row = int((end[1] - self._bw) // (self._ts + self._lw))
-            col = int((end[0] - self._bw) // (self._ts + self._lw))
-            if 0 <= row < self.nrows and 0 <= col < self.ncols and (row, col) != self._previous:
-                current = row, col
-                if buttons[0]:
-                    if self.color != self.at(current).color \
-                            or self.mark != self.at(current).mark:
-                        self.erase(current)
-                        self._visited.discard(current)
+        if buttons[0] == buttons[2]:
+            return
+        row = int((end[1] - self._bw) // (self._ts + self._lw))
+        col = int((end[0] - self._bw) // (self._ts + self._lw))
+        if not (0 <= row < self.nrows and 0 <= col < self.ncols) or (row, col) == self._previous:
+            return
+        current = row, col
+        if buttons[0]:
+            if self.color != self.at(current).color \
+                    or self.mark != self.at(current).mark:
+                self.erase(current)
+                self._visited.discard(current)
 
-                    if self.connection_mode == Grid.TREE:
-                        if current not in self._visited:
-                            adj = util.adjacency(current, self._previous)
-                            self.connect(self._previous, adj)
+            if self.connection_mode == Grid.TREE:
+                if current not in self._visited:
+                    adj = util.adjacency(current, self._previous)
+                    self.connect(self._previous, adj)
 
-                    elif self.connection_mode == Grid.BLOB:
-                        for direction in NORTH, WEST, SOUTH, EAST:
-                            if util.near(current, direction) in self._visited:
-                                self.connect(current, direction)
+            elif self.connection_mode == Grid.BLOB:
+                for direction in NORTH, WEST, SOUTH, EAST:
+                    if util.step(current, direction) in self._visited:
+                        self.connect(current, direction)
 
-                    elif self.connection_mode == Grid.TRACE:
-                        adj = util.adjacency(current, self._previous)
-                        self.connect(self._previous, adj)
+            elif self.connection_mode == Grid.TRACE:
+                self.connect(self._previous, util.adjacency(current, self._previous))
 
-                    self.put(current, self.color, self.mark)
-                    self._visited.add(current)
-                else:
-                    self.erase(current)
-                    self._visited.discard(current)
-                self._previous = current
+            self.put(current, self.color, self.mark)
+            self._visited.add(current)
+        else:
+            self.erase(current)
+            self._visited.discard(current)
+        self._previous = current
 
     def on_key_down(self, unicode, key, mod):
         if key == pygame.K_q:
@@ -224,6 +236,18 @@ class Grid(hgf.SimpleWidget):
             self.grid[p[0] + 1][p[1]].disconnect(NORTH)
         if direction & EAST and p[1] < self.ncols - 1:
             self.grid[p[0]][p[1] + 1].disconnect(WEST)
+
+    def flood_set(self, p):
+        queue = [p]
+        visited = set()
+        while queue:
+            q = queue.pop()
+            visited.add(q)
+            for direction in (NORTH, WEST, SOUTH, EAST):
+                adj = util.step(q, direction)
+                if self.at(q).connections & direction and adj not in visited:
+                    queue.append(adj)
+        return visited
 
     def erase(self, p):
         self.at(p).erase()
