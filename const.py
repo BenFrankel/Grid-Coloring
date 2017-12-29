@@ -1,5 +1,7 @@
 # Named colors
-BLACK = (0, 0, 0)
+TRANSPARENT = (0, 0, 0)
+BLACK = (1, 1, 1)
+DGREY = (50, 50, 50)
 GREY = (120, 120, 120)
 LGREY = (180, 180, 180)
 WHITE = (255, 255, 255)
@@ -10,7 +12,7 @@ GREEN = (0, 200, 0)
 CYAN = (0, 200, 200)
 BLUE = (0, 60, 220)
 PURPLE = (160, 0, 200)
-COLORS = (GREY, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE)
+COLORS = (DGREY, RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE)
 
 # The cardinal directions as bit flags
 NORTH = 1

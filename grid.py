@@ -17,7 +17,12 @@ class Tile(hgf.SimpleWidget):
         self._lw = None
 
     def refresh_background(self):
-        self.background = self.mark(self.color, self.connections, self._ts, self._lw)
+        self.background = self.mark(
+            self.color,
+            self.connections,
+            self._ts,
+            self._lw
+        )
 
     @hgf.double_buffer
     class color:
@@ -25,7 +30,7 @@ class Tile(hgf.SimpleWidget):
             self.refresh_background_flag = True
 
     @hgf.double_buffer
-    class style:
+    class mark:
         def on_transition(self):
             self.refresh_background_flag = True
 
@@ -46,7 +51,6 @@ class Tile(hgf.SimpleWidget):
 
     def erase(self):
         self.color = WHITE
-        # self.mark = mark.FLAT
 
 
 class Grid(hgf.SimpleWidget):
@@ -176,11 +180,11 @@ class Grid(hgf.SimpleWidget):
         elif key == pygame.K_e:
             self.connection_mode = Grid.TRACE
         elif key == pygame.K_i:
-            self.mark = self._marks['path']
+            self.mark = self._marks[0]
         elif key == pygame.K_o:
-            self.mark = self._marks['fill']
+            self.mark = self._marks[1]
         elif key == pygame.K_p:
-            self.mark = self._marks['flat']
+            self.mark = self._marks[2]
 
     def at(self, *args):
         if len(args) == 1:
@@ -223,6 +227,7 @@ class Grid(hgf.SimpleWidget):
 
     def erase(self, p):
         self.at(p).erase()
+        self.at(p).mark = self._marks[0]
         self.disconnect(p, NORTH | WEST | SOUTH | EAST)
 
 
