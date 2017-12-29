@@ -37,7 +37,7 @@ CTRL+L: Load the last saved grid
 ## Dependencies
 
 - Python 3.x
-- hgf 0.2.0 (should be handled by pip)
+- hgf 0.2.1 (should be handled by pip)
 
 ## Download
 

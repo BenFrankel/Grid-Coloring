@@ -2,7 +2,7 @@ import hgf
 import pygame
 
 
-class Splotch(hgf.LayeredComponent):
+class Splotch(hgf.FlatComponent):
     def __init__(self, color, **kwargs):
         super().__init__(**kwargs)
         self.type = 'splotch'
