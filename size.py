@@ -56,7 +56,7 @@ def palette_rect(dim, grid, num_colors):
     gr = grid_rect(dim, grid)
 
     width = cs * ((1 + gap) * num_colors - gap)
-    height = cs
+    height = cs * (1 + gap / 2)
     top = (dim[1] + gr.bottom - height) // 2
     left = (dim[0] - width) // 2
 

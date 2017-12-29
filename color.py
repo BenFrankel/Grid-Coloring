@@ -45,10 +45,11 @@ class Palette(hgf.LayeredComponent):
     def refresh_layout(self):
         super().refresh_layout()
         x = 0
+        y = self._cs * self._gap / 2
         for splotch in self._splotches:
-            splotch.pos = x, 0
+            splotch.pos = x, y
             x += self._cs * (1 + self._gap)
-        self._splotches[self.index].y -= self._cs * self._gap / 2
+        self._splotches[self.index].y = 0
         for splotch in self._splotches:
             splotch.on_x_transition()
             splotch.on_y_transition()
