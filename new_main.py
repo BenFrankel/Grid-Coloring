@@ -42,19 +42,9 @@ class GridColoringApp(hgf.App):
         self.palette.pos = size.palette_rect(self.size, self.grid, len(self.palette.colors)).topleft
 
     def on_key_down(self, unicode, key, mod):
-        pass
-        # if key == pygame.K_s:
-        #     if mod & pygame.KMOD_CTRL:
-        #         gr = size.grid_rect(window.dim, window.main_grid)
-        #         grid_surf = pygame.Surface((gr.width, gr.height))
-        #         grid_surf.fill(WHITE)
-        #         draw.draw_grid(grid_surf,
-        #                        window.main_grid,
-        #                        (0, 0),
-        #                        size.tile_size(window.dim, window.main_grid),
-        #                        size.line_width(window.dim, window.main_grid),
-        #                        size.border_width(window.dim, window.main_grid))
-        #         pygame.image.save(grid_surf, "grids/img/latest.png")
+        if key == pygame.K_s:
+            if mod & pygame.KMOD_CTRL:
+                pygame.image.save(self.grid._display, "grids/img/latest.png")
 
     def handle_message(self, sender, message, **params):
         if message == Palette.MSG_CHANGED_COLOR:
