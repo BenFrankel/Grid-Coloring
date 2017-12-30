@@ -7,8 +7,8 @@ import pygame
 import pickle
 
 
-class Tile(hgf.SimpleWidget):
-    def __init__(self, color=None, mark=None, connections=0, **kwargs):
+class Tile(hgf.FlatComponent):
+    def __init__(self, color=WHITE, mark=None, connections=0, **kwargs):
         super().__init__(**kwargs)
         self.color = color
         self.mark = mark
@@ -21,7 +21,7 @@ class Tile(hgf.SimpleWidget):
             self.color,
             self.connections,
             self._ts,
-            self._lw
+            self._lw,
         )
 
     @hgf.double_buffer
@@ -39,9 +39,13 @@ class Tile(hgf.SimpleWidget):
         def on_transition(self):
             self.refresh_background_flag = True
 
-    def put(self, color, style):
+    @property
+    def is_empty(self):
+        return self.color == WHITE
+
+    def put(self, color, mark):
         self.color = color
-        self.mark = style
+        self.mark = mark
 
     def connect(self, direction):
         self.connections |= direction
@@ -53,7 +57,7 @@ class Tile(hgf.SimpleWidget):
         self.color = WHITE
 
 
-class Grid(hgf.SimpleWidget):
+class Grid(hgf.LayeredComponent):
     BLOB = 0
     TREE = 1
     TRACE = 2
@@ -81,7 +85,7 @@ class Grid(hgf.SimpleWidget):
         self.grid = None
 
     def on_load(self):
-        self.grid = [[Tile(WHITE) for _ in range(self.ncols)] for _ in range(self.nrows)]
+        self.grid = [[Tile() for _ in range(self.ncols)] for _ in range(self.nrows)]
         self.register_load(*[tile for row in self.grid for tile in row])
 
     def load_style(self):
@@ -116,7 +120,7 @@ class Grid(hgf.SimpleWidget):
             self.ncols,
             self._bw,
             self._lw,
-            self._ts
+            self._ts,
         )
 
     def on_mouse_down(self, pos, button, hovered):
@@ -132,11 +136,11 @@ class Grid(hgf.SimpleWidget):
         current = (row, col)
         if pygame.key.get_mods() & pygame.KMOD_SHIFT and self.at(current).color != WHITE:
             if button == 3:
-                for p in self.flood_set(current):
+                for p in flood_set(self, current):
                     self.erase(p)
                     self._visited.discard(p)
             else:
-                for p in self.flood_set(current):
+                for p in flood_set(self, current):
                     self._visited.add(p)
                     self.put(p, self.color, self.mark)
         else:
@@ -237,30 +241,40 @@ class Grid(hgf.SimpleWidget):
         if direction & EAST and p[1] < self.ncols - 1:
             self.grid[p[0]][p[1] + 1].disconnect(WEST)
 
-    def flood_set(self, p):
-        queue = [p]
-        visited = set()
-        while queue:
-            q = queue.pop()
-            visited.add(q)
-            for direction in (NORTH, WEST, SOUTH, EAST):
-                adj = util.step(q, direction)
-                if self.at(q).connections & direction and adj not in visited:
-                    queue.append(adj)
-        return visited
-
     def erase(self, p):
         self.at(p).erase()
         self.at(p).mark = self._marks[0]
         self.disconnect(p, NORTH | WEST | SOUTH | EAST)
 
 
-def save_grid(grid):
-    with open("grids/inf/latest.txt", 'wb') as f:
-        pickle.dump(grid, f)
+def flood_set(grid, p):
+    queue = [p]
+    visited = set()
+    while queue:
+        q = queue.pop()
+        visited.add(q)
+        for direction in (NORTH, WEST, SOUTH, EAST):
+            adj = util.step(q, direction)
+            if grid.at(q).connections & direction and adj not in visited:
+                queue.append(adj)
+    return visited
+
+
+def save_grid(grid, name='latest'):
+    with open('grids/inf/' + name, 'wb') as f:
+        grid_data = [[(tile.color, tile.mark, tile.connections) for tile in row] for row in grid.grid]
+        pickle.dump((grid._visited, grid.nrows, grid.ncols, grid_data), f)
         f.close()
 
 
-def load_grid(name='latest'):
-    with open("grids/inf/" + name + ".txt", 'rb') as f:
-        return pickle.load(f)
+def load_grid(grid, name='latest'):
+    with open('grids/inf/' + name, 'rb') as f:
+        grid._visited, grid.nrows, grid.ncols, grid_data = pickle.load(f)
+
+        grid.unregister(*[tile for row in grid.grid for tile in row])
+        grid.grid = [[Tile(*tile_data) for tile_data in row] for row in grid_data]
+        grid.register_load(*[tile for row in grid.grid for tile in row])
+
+        grid.refresh_proportions_flag = True
+        grid.refresh_layout_flag = True
+        grid.refresh_background_flag = True

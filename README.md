@@ -48,7 +48,7 @@ When a problem I'm working on involves a square grid, I draw some straight (cita
 ## Dependencies
 
 - Python 3.x
-- hgf 0.2.1 (should be handled by pip)
+- hgf 0.2.2 (should be handled by pip)
 
 ## Download
 
