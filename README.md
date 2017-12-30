@@ -4,7 +4,9 @@ When a problem I'm working on involves a square grid, I draw some straight (cita
 
 ## Examples
 
-TODO
+![Example 1](https://github.com/BenFrankel/GridColoring/raw/screenshots/ex5.png)
+![Example 2](https://github.com/BenFrankel/GridColoring/raw/screenshots/ex1.png)
+![Example 3](https://github.com/BenFrankel/GridColoring/raw/screenshots/ex4.png)
 
 ## Controls
 
