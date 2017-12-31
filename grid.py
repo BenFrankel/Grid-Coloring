@@ -202,11 +202,12 @@ class Grid(hgf.LayeredComponent):
             raise ValueError('Grid may not have more than {} rows'.format(MAX_SIZE))
         self.nrows += 1
         row = [Tile() for _ in range(self.ncols)]
-        self.register_load(*row)
         self.grid.insert(index, row)
+        for col in range(self.ncols):
+            self.erase((index, col))
+        self.register_load(*row)
         self.parent.refresh_proportions_flag = True
         self.parent.refresh_layout_flag = True
-        # TODO: Disconnect
 
     def pop_row(self, index):
         if self.nrows <= MIN_SIZE:
@@ -221,9 +222,11 @@ class Grid(hgf.LayeredComponent):
             raise ValueError('Grid may not have more than {} columns'.format(MAX_SIZE))
         self.ncols += 1
         col = [Tile() for _ in range(self.nrows)]
-        self.register_load(*col)
         for row, tile in zip(self.grid, col):
             row.insert(index, tile)
+        for row in range(self.nrows):
+            self.erase((row, index))
+        self.register_load(*col)
         self.parent.refresh_proportions_flag = True
         self.parent.refresh_layout_flag = True
 
@@ -259,12 +262,12 @@ class Grid(hgf.LayeredComponent):
             if mod & pygame.KMOD_SHIFT:
                 self.pop_row(-1)
             else:
-                self.insert_row(-1)
+                self.insert_row(self.nrows)
         elif key == pygame.K_RIGHT:
             if mod & pygame.KMOD_SHIFT:
                 self.pop_col(-1)
             else:
-                self.insert_col(-1)
+                self.insert_col(self.ncols)
         elif key == pygame.K_LEFT:
             if mod & pygame.KMOD_SHIFT:
                 self.pop_col(0)
@@ -276,6 +279,8 @@ class Grid(hgf.LayeredComponent):
             return self.grid[args[0][0]][args[0][1]]
         elif len(args) == 2:
             return self.grid[args[0]][args[1]]
+        else:
+            raise ValueError('Expected one 2-tuple or two arguments to Grid.at')
 
     def set(self, p, tile):
         self.grid[p[0]][p[1]] = tile
