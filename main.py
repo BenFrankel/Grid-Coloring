@@ -1,84 +1,82 @@
+from grid import Grid, save_grid, load_grid
+from color import Palette
+from style import style_packs
 import size
-import util
 from const import *
 
+import hgf
 import pygame
 
 
-while True:
-    gr = size.grid_rect(window.dim, window.main_grid)
-    ts = size.tile_size(window.dim, window.main_grid)
-    lw = size.line_width(window.dim, window.main_grid)
-    bw = size.border_width(window.dim, window.main_grid)
+pygame.init()
+pygame.mixer.quit()
 
-    # for event in pygame.event.get():
 
-        # elif event.type == pygame.KEYDOWN:
-        #     if event.key == pygame.K_g:
-        #         if event.mod & pygame.KMOD_CTRL:
-        #             save_grid(window.main_grid)
-        #
-        #     elif event.key == pygame.K_l:
-        #         if event.mod & pygame.KMOD_CTRL:
-        #             window.main_grid = load_grid()
-        #             visited = set()
-        #             for i in range(window.main_grid.nrows):
-        #                 for j in range(window.main_grid.ncols):
-        #                     if window.main_grid.at(i, j).color != WHITE or window.main_grid.at(i, j).style != mark.DEFAULT:
-        #                         visited.add((i, j))
-        #
-            # elif event.key == pygame.K_UP:
-            #     grid = window.main_grid.grid
-            #     if event.mod & pygame.KMOD_SHIFT:
-            #         if window.main_grid.nrows > MIN_SIZE:
-            #             window.main_grid.nrows -= 1
-            #             window.main_grid.grid = grid[1:]
-            #             for j in range(window.main_grid.ncols):
-            #                 window.main_grid.disconnect((0, j), NORTH)
-            #     elif window.main_grid.nrows < MAX_SIZE:
-            #         window.main_grid.nrows += 1
-            #         window.main_grid.grid = [[Tile() for j in range(window.main_grid.ncols)]] + grid
-            #
-            # elif event.key == pygame.K_DOWN:
-            #     grid = window.main_grid.grid
-            #     if event.mod & pygame.KMOD_SHIFT:
-            #         if window.main_grid.nrows > MIN_SIZE:
-            #             window.main_grid.nrows -= 1
-            #             window.main_grid.grid = grid[:-1]
-            #             for j in range(window.main_grid.ncols):
-            #                 window.main_grid.disconnect((window.main_grid.nrows - 1, j), SOUTH)
-            #     elif window.main_grid.nrows < MAX_SIZE:
-            #         window.main_grid.nrows += 1
-            #         window.main_grid.grid = grid + [[Tile() for j in range(window.main_grid.ncols)]]
-            #
-            # elif event.key == pygame.K_RIGHT:
-            #     grid = window.main_grid.grid
-            #     if event.mod & pygame.KMOD_SHIFT:
-            #         if window.main_grid.ncols > MIN_SIZE:
-            #             for i in range(window.main_grid.nrows):
-            #                 grid[i].pop()
-            #             window.main_grid.ncols -= 1
-            #             window.main_grid.grid = grid
-            #             for i in range(window.main_grid.nrows):
-            #                 window.main_grid.disconnect((i, window.main_grid.ncols - 1), EAST)
-            #     elif window.main_grid.ncols < MAX_SIZE:
-            #         for i in range(window.main_grid.nrows):
-            #             grid[i].append(Tile())
-            #         window.main_grid.ncols += 1
-            #         window.main_grid.grid = grid
-            #
-            # elif event.key == pygame.K_LEFT:
-            #     grid = window.main_grid.grid
-            #     if event.mod & pygame.KMOD_SHIFT:
-            #         if window.main_grid.ncols > MIN_SIZE:
-            #             for i in range(window.main_grid.nrows):
-            #                 grid[i] = grid[i][1:]
-            #             window.main_grid.ncols -= 1
-            #             window.main_grid.grid = grid
-            #     elif window.main_grid.ncols < MAX_SIZE:
-            #         for i in range(window.main_grid.nrows):
-            #             grid[i] = [Tile()] + grid[i]
-            #         window.main_grid.ncols += 1
-            #         window.main_grid.grid = grid
-            #         for i in range(window.main_grid.nrows):
-            #             window.main_grid.disconnect((i, 0), WEST)
+class GridColoringApp(hgf.App):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.grid = None
+        self.palette = None
+
+    def on_load(self):
+        self.palette = Palette(COLORS)
+        self.register_load(self.palette)
+
+        self.grid = Grid(8, 8)
+        self.grid.color = self.palette.colors[self.palette.index]
+        self.register_load(self.grid)
+
+    def refresh_proportions(self):
+        super().refresh_proportions()
+        self.grid.size = size.grid_rect(self.size, self.grid).size
+        self.grid._bw = size.border_width(self.size, self.grid)
+        self.grid._lw = size.line_width(self.size, self.grid)
+        self.grid._ts = size.tile_size(self.size, self.grid)
+
+        self.palette.size = size.palette_rect(self.size, self.grid, len(self.palette.colors)).size
+        self.palette._cs = size.splotch_size(self.size, self.grid, len(self.palette.colors))
+        self.palette._gap = size.splotch_gap(self.size, self.grid, len(self.palette.colors))
+
+        # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
+        self.grid.on_w_transition()
+        self.grid.on_h_transition()
+        self.palette.on_w_transition()
+        self.palette.on_h_transition()
+        self.palette.refresh_proportions_flag = True
+        self.palette.refresh_layout_flag = True
+        self.palette.refresh_background_flag = True
+        self.grid.refresh_proportions_flag = True
+        self.grid.refresh_layout_flag = True
+        self.grid.refresh_background_flag = True
+
+    def refresh_layout(self):
+        self.grid.pos = size.grid_rect(self.size, self.grid).topleft
+        self.palette.pos = size.palette_rect(self.size, self.grid, len(self.palette.colors)).topleft
+
+        # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
+        self.grid.on_x_transition()
+        self.grid.on_y_transition()
+        self.palette.on_x_transition()
+        self.palette.on_y_transition()
+
+    def on_key_down(self, unicode, key, mod):
+        if mod & pygame.KMOD_CTRL:
+            if key == pygame.K_s:
+                pygame.image.save(self.grid._display, 'grids/img/latest.png')
+            elif key == pygame.K_g:
+                save_grid(self.grid)
+            elif key == pygame.K_l:
+                load_grid(self.grid)
+
+    def handle_message(self, sender, message, **params):
+        if message == Palette.MSG_CHANGED_COLOR:
+            self.grid.color = params['color']
+        else:
+            super().handle_message(sender, message, **params)
+
+
+launcher = hgf.AppManager('grid-coloring', GridColoringApp)
+launcher.style_packs = style_packs
+# launcher.compose_style = compose
+launcher.load()
+launcher.spawn_app().launch(fps=60, debug=True)

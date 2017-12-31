@@ -106,12 +106,21 @@ class Grid(hgf.LayeredComponent):
                 tile._lw = self._lw
                 tile.size = side, side
 
+                # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
+                tile.on_w_transition()
+                tile.on_h_transition()
+                tile.refresh_background_flag = True
+
     def refresh_layout(self):
         super().refresh_layout()
         for i, row in enumerate(self.grid):
             for j, tile in enumerate(row):
                 tile.pos = ((self._ts + self._lw) * j + self._bw - self._lw,
                             (self._ts + self._lw) * i + self._bw - self._lw)
+
+                # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
+                tile.on_x_transition()
+                tile.on_y_transition()
 
     def refresh_background(self):
         self.background = self._bg_factory(
@@ -188,6 +197,45 @@ class Grid(hgf.LayeredComponent):
             self._visited.discard(current)
         self._previous = current
 
+    def insert_row(self, index):
+        if self.nrows >= MAX_SIZE:
+            raise ValueError('Grid may not have more than {} rows'.format(MAX_SIZE))
+        self.nrows += 1
+        row = [Tile() for _ in range(self.ncols)]
+        self.register_load(*row)
+        self.grid.insert(index, row)
+        self.parent.refresh_proportions_flag = True
+        self.parent.refresh_layout_flag = True
+        # TODO: Disconnect
+
+    def pop_row(self, index):
+        if self.nrows <= MIN_SIZE:
+            raise ValueError('Grid may not have fewer than {} rows'.format(MIN_SIZE))
+        self.nrows -= 1
+        self.unregister(*self.grid.pop(index))
+        self.parent.refresh_proportions_flag = True
+        self.parent.refresh_layout_flag = True
+
+    def insert_col(self, index):
+        if self.nrows >= MAX_SIZE:
+            raise ValueError('Grid may not have more than {} columns'.format(MAX_SIZE))
+        self.ncols += 1
+        col = [Tile() for _ in range(self.nrows)]
+        self.register_load(*col)
+        for row, tile in zip(self.grid, col):
+            row.insert(index, tile)
+        self.parent.refresh_proportions_flag = True
+        self.parent.refresh_layout_flag = True
+
+    def pop_col(self, index):
+        if self.ncols <= MIN_SIZE:
+            raise ValueError('Grid may not have fewer than {} columns'.format(MIN_SIZE))
+        self.ncols -= 1
+        for row in self.grid:
+            self.unregister(row.pop(index))
+        self.parent.refresh_proportions_flag = True
+        self.parent.refresh_layout_flag = True
+
     def on_key_down(self, unicode, key, mod):
         if key == pygame.K_q:
             self.connection_mode = Grid.TREE
@@ -201,6 +249,27 @@ class Grid(hgf.LayeredComponent):
             self.mark = self._marks[1]
         elif key == pygame.K_p:
             self.mark = self._marks[2]
+
+        elif key == pygame.K_UP:
+            if mod & pygame.KMOD_SHIFT:
+                self.pop_row(0)
+            else:
+                self.insert_row(0)
+        elif key == pygame.K_DOWN:
+            if mod & pygame.KMOD_SHIFT:
+                self.pop_row(-1)
+            else:
+                self.insert_row(-1)
+        elif key == pygame.K_RIGHT:
+            if mod & pygame.KMOD_SHIFT:
+                self.pop_col(-1)
+            else:
+                self.insert_col(-1)
+        elif key == pygame.K_LEFT:
+            if mod & pygame.KMOD_SHIFT:
+                self.pop_col(0)
+            else:
+                self.insert_col(0)
 
     def at(self, *args):
         if len(args) == 1:
@@ -275,6 +344,5 @@ def load_grid(grid, name='latest'):
         grid.grid = [[Tile(*tile_data) for tile_data in row] for row in grid_data]
         grid.register_load(*[tile for row in grid.grid for tile in row])
 
-        grid.refresh_proportions_flag = True
-        grid.refresh_layout_flag = True
-        grid.refresh_background_flag = True
+        grid.parent.refresh_proportions_flag = True
+        grid.parent.refresh_layout_flag = True

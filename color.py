@@ -24,7 +24,7 @@ class Palette(hgf.LayeredComponent):
     MSG_CHANGED_COLOR = 'palette-changed-color'
 
     def __init__(self, colors, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(opacity=0, **kwargs)
         self._splotches = None
         self.index = 0
         self.colors = colors
@@ -45,11 +45,13 @@ class Palette(hgf.LayeredComponent):
     def refresh_layout(self):
         super().refresh_layout()
         x = 0
-        y = self._cs * self._gap / 2
+        y = int(self._cs * self._gap / 2)
         for splotch in self._splotches:
             splotch.pos = x, y
             x += self._cs * (1 + self._gap)
         self._splotches[self.index].y = 0
+
+        # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
         for splotch in self._splotches:
             splotch.on_x_transition()
             splotch.on_y_transition()
@@ -58,6 +60,11 @@ class Palette(hgf.LayeredComponent):
         super().refresh_proportions()
         for splotch in self._splotches:
             splotch.size = self._cs, self._cs
+
+            # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
+            splotch.on_w_transition()
+            splotch.on_h_transition()
+            splotch.refresh_background_flag = True
 
     def on_mouse_down(self, pos, button, hovered):
         if button == 4:
