@@ -110,6 +110,7 @@ def path_mark(color, connections, ts, lw):
 
 def grid_bg(size, nrows, ncols, bw, lw, ts):
     surf = pygame.Surface(size)
+    surf.fill(WHITE)
 
     # Draw edges
     # Horizontal
