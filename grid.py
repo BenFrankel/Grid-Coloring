@@ -218,7 +218,7 @@ class Grid(hgf.LayeredComponent):
         self.parent.refresh_layout_flag = True
 
     def insert_col(self, index):
-        if self.nrows >= MAX_SIZE:
+        if self.ncols >= MAX_SIZE:
             raise ValueError('Grid may not have more than {} columns'.format(MAX_SIZE))
         self.ncols += 1
         col = [Tile() for _ in range(self.nrows)]
@@ -254,25 +254,37 @@ class Grid(hgf.LayeredComponent):
             self.mark = self._marks[2]
 
         elif key == pygame.K_UP:
-            if mod & pygame.KMOD_SHIFT:
-                self.pop_row(0)
-            else:
-                self.insert_row(0)
+            try:
+                if mod & pygame.KMOD_SHIFT:
+                    self.pop_row(0)
+                else:
+                    self.insert_row(0)
+            except ValueError:
+                pass
         elif key == pygame.K_DOWN:
-            if mod & pygame.KMOD_SHIFT:
-                self.pop_row(-1)
-            else:
-                self.insert_row(self.nrows)
+            try:
+                if mod & pygame.KMOD_SHIFT:
+                    self.pop_row(-1)
+                else:
+                    self.insert_row(self.nrows)
+            except ValueError:
+                pass
         elif key == pygame.K_RIGHT:
-            if mod & pygame.KMOD_SHIFT:
-                self.pop_col(-1)
-            else:
-                self.insert_col(self.ncols)
+            try:
+                if mod & pygame.KMOD_SHIFT:
+                    self.pop_col(-1)
+                else:
+                    self.insert_col(self.ncols)
+            except ValueError:
+                pass
         elif key == pygame.K_LEFT:
-            if mod & pygame.KMOD_SHIFT:
-                self.pop_col(0)
-            else:
-                self.insert_col(0)
+            try:
+                if mod & pygame.KMOD_SHIFT:
+                    self.pop_col(0)
+                else:
+                    self.insert_col(0)
+            except ValueError:
+                pass
 
     def at(self, *args):
         if len(args) == 1:
