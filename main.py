@@ -42,18 +42,22 @@ class GridColoringApp(hgf.App):
         self.grid.on_h_transition()
         self.palette.on_w_transition()
         self.palette.on_h_transition()
-        self.palette.refresh_proportions_flag = True
         self.palette.refresh_layout_flag = True
         self.palette.refresh_background_flag = True
-        self.grid.refresh_proportions_flag = True
         self.grid.refresh_layout_flag = True
         self.grid.refresh_background_flag = True
+
+    def _step_output(self):
+        # TODO: This is bad, and it should be temporary. It is here to step over an internal bug in hgf 0.2.2.
+        self._set_dirty(True)
+        super()._step_output()
 
     def refresh_layout(self):
         self.grid.pos = size.grid_rect(self.size, self.grid).topleft
         self.palette.pos = size.palette_rect(self.size, self.grid, len(self.palette.colors)).topleft
 
         # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
+        self.grid._dirty_rects.clear()
         self.grid.on_x_transition()
         self.grid.on_y_transition()
         self.palette.on_x_transition()

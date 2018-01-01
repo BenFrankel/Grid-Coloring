@@ -48,7 +48,7 @@ class Palette(hgf.LayeredComponent):
         y = int(self._cs * self._gap / 2)
         for splotch in self._splotches:
             splotch.pos = x, y
-            x += self._cs * (1 + self._gap)
+            x += int(self._cs * (1 + self._gap))
         self._splotches[self.index].y = 0
 
         # TODO: All of this is boilerplate. It should not be necessary in later versions of hgf.
