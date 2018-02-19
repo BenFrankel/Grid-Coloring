@@ -4,9 +4,9 @@ When a problem I'm working on involves a square grid, I draw some straight (cita
 
 ## Examples
 
-![Example 1](https://github.com/BenFrankel/GridColoring/raw/screenshots/ex5.png)
-![Example 2](https://github.com/BenFrankel/GridColoring/raw/screenshots/ex1.png)
-![Example 3](https://github.com/BenFrankel/GridColoring/raw/screenshots/ex4.png)
+![Example 1](https://github.com/benfrankel/grid-coloring/raw/screenshots/ex5.png)
+![Example 2](https://github.com/benfrankel/grid-coloring/raw/screenshots/ex1.png)
+![Example 3](https://github.com/benfrankel/grid-coloring/raw/screenshots/ex4.png)
 
 ## Controls
 
@@ -54,7 +54,7 @@ When a problem I'm working on involves a square grid, I draw some straight (cita
 
 Download this repository with the following [git](https://git-scm.com/) command:
 
-`git clone https://github.com/BenFrankel/GridColoring`
+`git clone https://github.com/benfrankel/grid-coloring`
 
 ## Installation
 
@@ -64,4 +64,4 @@ Now you can start the program with `python main.py`.
 
 ## License
 
-This project is licensed under the [Apache 2.0](https://github.com/BenFrankel/GridColoring/blob/master/LICENSE) license, so you are free to use, distribute, and modify it.
+This project is licensed under the [Apache 2.0](https://github.com/benfrankel/grid-coloring/blob/master/LICENSE) license, so you are free to use, distribute, and modify it.
